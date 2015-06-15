@@ -1,0 +1,26 @@
+{
+  "name": "bbData",
+  "version": "1.0.3",
+  "homepage": "https://github.com/tothandras/buildbot-data",
+  "authors": [
+    "Andras Toth <andras.toth93@gmail.com>"
+  ],
+  "description": "Buildbot AngularJS data module",
+  "main": "dist/buildbot-data.js",
+  "keywords": [
+    "buildbot"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test"
+  ],
+  "dependencies": {
+    "angular": "~1.4.1"
+  },
+  "devDependencies": {
+    "angular-mocks": "~1.4.1"
+  }
+}

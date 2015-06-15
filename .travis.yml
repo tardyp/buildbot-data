@@ -1,0 +1,21 @@
+language: node_js
+node_js:
+- 0.12
+cache:
+  directories:
+  - node_modules
+  - libs
+install:
+- npm install
+- npm install -g gulp bower
+- bower install
+script:
+- gulp
+deploy:
+  provider: npm
+  email: andras.toth93@gmail.com
+  api_key:
+    secure: hueiiQIaAQyJh1uP4eliQx1m528OzDvvIE/uVgo/Kz6NBfyAxczT7nEHsOqNMnBGPvKmOquBWAefuIANsdcx9Lgd/J27gUj8dp4dZx3A6kKXOlA49govak68s8cNfbQErE8ntLl32+dlhkX4G546Zk2XMvB3+hmJgr/0RdE6olpLDhCq/Hh0WrjSnd4KhmGSvw/zYUQf6w0z0mP8mTq+3yh2Uil2N2yaILkqbgrzv4jw8KUshxD+0s66Dp7TXXh5NPgDON3C3WBDxwuJ/ShhzRkpm65ME0p98d90SO4k2SptghsPmJP3/itBvD4JlOeOqfcFQicsp3U+hQwnMgto7uvPJM6VvAD/133pvlJsaAn7lwU69QhfoGgRjDcoReRnufkf2g73Iuwj9Q76GVxP2jIj8iOxXrwpri+PhFfFRKG4r6ngVieB7eBbSAV+uabnMnG8ui7aBL5Jc7klRhNTIEVcPdINM9HWU0h3IxgkEElUFX2T2RIuxVqK2y4PPDp11cKKmHGeIdtFRje99j5iIs1zB4Cc/ciXvD+iJmbqaRHD+sDuMAA7UeWl1/z3wnmVbBe84MCLKqbA6h/wWUOJfp7Vy+C64Ar3y77XepL2YAeYkG7xVG9Ifc62JPQ4UKnPhj0XEQBZTDK/1JsZNw/gAMN246zMhU0g1tsX4C45844=
+  on:
+    tags: true
+    repo: tothandras/buildbot-data

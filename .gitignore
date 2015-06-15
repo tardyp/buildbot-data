@@ -1,0 +1,6 @@
+# Bower library folder
+libs
+
+# Node package manager
+node_modules
+npm-debug.log
