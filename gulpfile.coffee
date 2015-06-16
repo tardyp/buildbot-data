@@ -36,10 +36,6 @@ files =
         "#{paths.src}/**/*.module.coffee"
         "#{paths.src}/**/*!(.spec).coffee"
     ]
-    toCopy: [
-        "LICENSE"
-        "README.md"
-    ]
 
 ################################################################################
 #   Tasks
@@ -59,10 +55,6 @@ gulp.task 'build', ['clean'], ->
     .pipe p.rename("#{c.fileName}.min.js")
     .pipe gulp.dest(paths.build)
 
-gulp.task 'copy', ['clean'], ->
-    gulp.src(files.toCopy)
-    .pipe gulp.dest(paths.build)
-
 gulp.task 'test', ['bower'], ->
     # pass in a directory that doesn't exist
     # karma will use the files specified in the configuration
@@ -71,4 +63,4 @@ gulp.task 'test', ['bower'], ->
 
 gulp.task 'bower', -> return p.bower()
 
-gulp.task 'default', ['clean', 'test', 'build', 'copy']
+gulp.task 'default', ['clean', 'test', 'build']
