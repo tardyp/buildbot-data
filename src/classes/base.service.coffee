@@ -19,7 +19,7 @@ class Base extends Factory
                 @subscribe()
 
             update: (o) ->
-                angular.extend(@, o)
+                angular.merge(@, o)
 
             get: (args...) ->
                 dataService.get(@endpoint, @id, args...)
