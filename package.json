@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git://github.com/tothandras/buildbot-data.git"
   },
-  "main": "dist/buildbot-data.js",
+  "main": "index.js",
   "devDependencies": {
     "coffee-script": "*",
     "del": "^1.2.0",
