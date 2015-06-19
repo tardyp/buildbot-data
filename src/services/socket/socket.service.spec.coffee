@@ -14,9 +14,8 @@ describe 'Socket service', ->
             @sendQueue.push(data)
 
         flush: ->
-            $rootScope.$apply =>
-                while message = @sendQueue.shift()
-                    @webSocket.onmessage(message)
+            while message = @sendQueue.shift()
+                @webSocket.onmessage(message)
 
         getWebSocket: ->
             return @webSocket
@@ -29,8 +28,7 @@ describe 'Socket service', ->
 
     webSocketBackend = new WebSocketBackend()
     beforeEach ->
-        module 'bbData'
-        # return the SocketBackend when
+        module 'data_service'
         module ($provide) ->
             $provide.constant('webSocketService', webSocketBackend)
 
@@ -67,7 +65,7 @@ describe 'Socket service', ->
     it 'should add an _id to each message', ->
         socket.readyState = 1
         expect(socket.send).not.toHaveBeenCalled()
-        socketService.send({a: 1})
+        socketService.send({})
         expect(socket.send).toHaveBeenCalledWith(jasmine.any(String))
         argument = socket.send.calls.argsFor(0)[0]
         expect(angular.fromJson(argument)._id).toBeDefined()
@@ -89,7 +87,8 @@ describe 'Socket service', ->
 
         # send the message
         webSocketBackend.send(response)
-        webSocketBackend.flush()
+        $rootScope.$apply ->
+            webSocketBackend.flush()
         # the promise should be resolved
         expect(handler).toHaveBeenCalled()
 
@@ -112,7 +111,8 @@ describe 'Socket service', ->
 
         # send the message
         webSocketBackend.send(response)
-        webSocketBackend.flush()
+        $rootScope.$apply ->
+            webSocketBackend.flush()
         # the promise should be rejected
         expect(handler).not.toHaveBeenCalled()
         expect(errorHandler).toHaveBeenCalled()
