@@ -9,13 +9,9 @@ class Data extends Provider
             self = null
             constructor: ->
                 self = @
+                # setup socket listeners
                 socketService.eventStream.onUnsubscribe = @unsubscribeListener
-                # map of path: [listener id]
-                @listeners = {}
-                # resend the start consuming messages for active paths
-                socketService.socket.onclose = =>
-                    for path, listenerIds of @listeners
-                        if listenerIds.length > 0 then @startConsuming(path)
+                socketService.socket.onclose = @socketCloseListener
                 # generate loadXXX functions for root endpoints
                 @constructor.generateEndpoints()
 
@@ -31,7 +27,7 @@ class Data extends Provider
                 if angular.isObject(last)
                     query = args.pop()
                     # 'subscribe' is not part of the query
-                    query.subscribe = null
+                    delete query.subscribe
 
                 # up to date array, this will be returned
                 updating = []
@@ -75,6 +71,8 @@ class Data extends Provider
                                 endpoint = dataUtilsService.endpointPath(args)
                                 # wrap the elements in classes
                                 response = response.map (i) -> new WrapperClass(i, endpoint)
+                                # map of path: [listener id]
+                                @listeners ?= {}
                                 # add listener ids to the socket path
                                 @listeners[socketPath] ?= []
                                 response.forEach (r) =>
@@ -123,12 +121,19 @@ class Data extends Provider
                 })
 
             # make the stopConsuming calls when there is no listener for a specific endpoint
-            unsubscribeListener: (removed) ->
-                for k, v of self.listeners
-                    i = v.indexOf(removed.id)
-                    if i >= 0
-                        v.splice(i, 1)
-                        if v.length is 0 then self.stopConsuming(k)
+            unsubscribeListener: (removed) =>
+                for path, ids of @listeners
+                    i = ids.indexOf(removed.id)
+                    if i > -1
+                        ids.splice(i, 1)
+                        if ids.length is 0 then @stopConsuming(path)
+
+            # resend the start consuming messages for active paths
+            socketCloseListener: =>
+                if not @listeners? then return
+                for path, ids of @listeners
+                    if ids.length > 0 then @startConsuming(path)
+                return null
 
             # TODO control messages
             control: () ->
@@ -147,19 +152,17 @@ class Data extends Provider
                     @::["get#{E}"] = (args...) =>
                         self.get(e, args...)
 
-            # opens a new group
+            # opens a new accessor
             open: ->
-                return new class Group
-                    rootClasses = null
+                return new class DataAccessor
+                    rootClasses = []
                     constructor: ->
-                        @rootClasses = []
-                        rootClasses = @rootClasses
+                        @rootClasses = rootClasses
                         @constructor.generateEndpoints()
 
                     # calls unsubscribe on each root classes
                     close: ->
-                        @rootClasses.forEach (c) ->
-                            c.unsubscribe() if angular.isFunction(c.unsubscribe)
+                        @rootClasses.forEach (c) -> c.unsubscribe()
 
                     # closes the group when the scope is destroyed
                     closeOnDestroy: (scope) ->
@@ -174,6 +177,8 @@ class Data extends Provider
                             E = dataUtilsService.capitalize(e)
                             @::["get#{E}"] = (args...) =>
                                 p = self["get#{E}"](args...)
+                                # when the promise is resolved add the root level classes
+                                # to an array (on close we can call unsubscribe on those)
                                 p.then (classes) ->
                                     classes.forEach (c) -> rootClasses.push(c)
                                 return p

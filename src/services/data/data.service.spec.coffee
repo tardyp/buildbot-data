@@ -1,5 +1,5 @@
 describe 'Data service', ->
-    beforeEach module 'data_service'
+    beforeEach module 'bbData'
 
     dataService = restService = socketService = ENDPOINTS = $rootScope = $q = $httpBackend = null
 

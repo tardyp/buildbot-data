@@ -28,7 +28,7 @@ describe 'Socket service', ->
 
     webSocketBackend = new WebSocketBackend()
     beforeEach ->
-        module 'data_service'
+        module 'bbData'
         module ($provide) ->
             $provide.constant('webSocketService', webSocketBackend)
 
