@@ -2,7 +2,6 @@ describe 'Data service', ->
     beforeEach module 'bbData'
 
     dataService = restService = socketService = ENDPOINTS = $rootScope = $q = $httpBackend = null
-
     injected = ($injector) ->
         dataService = $injector.get('dataService')
         restService = $injector.get('restService')
@@ -63,7 +62,6 @@ describe 'Data service', ->
             expect(dataService.startConsuming).not.toHaveBeenCalled()
 
         it 'should add the new instance on /new WebSocket message', ->
-            # spyOn(dataService, 'startConsuming').and.returnValue($q.resolve())
             spyOn(restService, 'get').and.returnValue($q.resolve(builds: []))
             builds = null
             $rootScope.$apply ->
@@ -72,6 +70,20 @@ describe 'Data service', ->
                 k: 'builds/111/new'
                 m: asd: 111
             expect(builds.pop().asd).toBe(111)
+
+    describe 'control(method, params)', ->
+
+        it 'should send a jsonrpc message using POST', ->
+            spyOn(restService, 'post')
+            expect(restService.post).not.toHaveBeenCalled()
+            method = 'force'
+            params = a: 1
+            dataService.control(method, params)
+            expect(restService.post).toHaveBeenCalledWith
+                id: 1
+                jsonrpc: '2.0'
+                method: method
+                params: params
 
     describe 'open()', ->
 

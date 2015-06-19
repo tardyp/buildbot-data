@@ -2,7 +2,6 @@ describe 'Helper service', ->
     beforeEach module 'bbData'
 
     dataUtilsService = null
-
     injected = ($injector) ->
         dataUtilsService = $injector.get('dataUtilsService')
 

@@ -135,13 +135,16 @@ class Data extends Provider
                     if ids.length > 0 then @startConsuming(path)
                 return null
 
-            # TODO control messages
-            control: () ->
-                #restService.post()
+            control: (method, params) ->
+                restService.post
+                    id: @getNextId()
+                    jsonrpc: '2.0'
+                    method: method
+                    params: params
 
             # returns next id for jsonrpc2 control messages
             getNextId: ->
-                @jsonrpc ?= 0
+                @jsonrpc ?= 1
                 @jsonrpc++
 
             # generate functions for root endpoints

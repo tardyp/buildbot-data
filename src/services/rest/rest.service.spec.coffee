@@ -5,7 +5,6 @@ describe 'Rest service', ->
             $provide.constant('API', '/api/')
 
     restService = $httpBackend = null
-
     injected = ($injector) ->
         restService = $injector.get('restService')
         $httpBackend = $injector.get('$httpBackend')

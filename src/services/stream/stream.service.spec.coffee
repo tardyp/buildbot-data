@@ -2,7 +2,6 @@ describe 'Stream service', ->
     beforeEach module 'bbData'
 
     Stream = stream = null
-
     injected = ($injector) ->
         Stream = $injector.get('Stream')
         stream = new Stream()
