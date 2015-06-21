@@ -21,11 +21,14 @@ WATCH = p.util.env.watch?
 ################################################################################
 
 c =
-    name: 'bbData'
     fileName: 'buildbot-data'
     karma:
         action: if WATCH then 'watch' else 'run'
         configFile: 'karma.conf.coffee'
+    classify:
+        appName: 'bbData'
+        provider:
+            suffix: 'Service'
 
 paths =
     src: 'src'
@@ -34,7 +37,7 @@ paths =
 files =
     coffee: [
         "#{paths.src}/**/*.module.coffee"
-        "#{paths.src}/**/*!(.spec).coffee"
+        "#{paths.src}/**/!(*.spec).coffee"
     ]
 
 ################################################################################
@@ -46,7 +49,7 @@ gulp.task 'clean', (cb) ->
 
 gulp.task 'build', ['clean'], ->
     gulp.src files.coffee
-    .pipe p.ngClassify(appName: c.name)
+    .pipe p.ngClassify(c.classify)
     .pipe p.coffee()
     .pipe p.concat("#{c.fileName}.js")
     .pipe gulp.dest(paths.build)
