@@ -4,6 +4,7 @@ class Data extends Provider
     # TODO caching
     cache: false
 
+    ### @ngInject ###
     $get: ($log, $injector, $q, restService, socketService, dataUtilsService, ENDPOINTS) ->
         return new class DataService
             self = null
