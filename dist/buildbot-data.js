@@ -21,7 +21,7 @@
     function LoggingInterceptor($httpProvider) {
 
       /* @ngInject */
-      $httpProvider.interceptors.push(function($log, API) {
+      $httpProvider.interceptors.push(["$log", "API", function($log, API) {
         return {
           request: function(config) {
             if (config.url.indexOf(API) === 0) {
@@ -30,7 +30,7 @@
             return config;
           }
         };
-      });
+      }]);
     }
 
     return LoggingInterceptor;
@@ -745,6 +745,7 @@
 
       })());
     };
+    Data.prototype.$get.$inject = ["$log", "$injector", "$q", "restService", "socketService", "dataUtilsService", "ENDPOINTS"];
 
     return Data;
 
