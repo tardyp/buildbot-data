@@ -19,6 +19,8 @@
 
   LoggingInterceptor = (function() {
     function LoggingInterceptor($httpProvider) {
+
+      /* @ngInject */
       $httpProvider.interceptors.push(function($log, API) {
         return {
           request: function(config) {
@@ -660,6 +662,10 @@
           });
         };
 
+        DataService.prototype.getSpecification = function() {
+          return restService.get('application.spec');
+        };
+
         DataService.prototype.getNextId = function() {
           if (this.jsonrpc == null) {
             this.jsonrpc = 1;
@@ -752,65 +758,58 @@
   var DataUtils;
 
   DataUtils = (function() {
-    function DataUtils() {
-      return new (DataUtils = (function() {
-        function DataUtils() {}
+    function DataUtils() {}
 
-        DataUtils.prototype.capitalize = function(w) {
-          return w[0].toUpperCase() + w.slice(1).toLowerCase();
-        };
+    DataUtils.prototype.capitalize = function(w) {
+      return w[0].toUpperCase() + w.slice(1).toLowerCase();
+    };
 
-        DataUtils.prototype.type = function(e) {
-          var name, parsed, splitted;
-          splitted = e.split('/');
-          while (true) {
-            name = splitted.pop();
-            parsed = parseInt(name);
-            if (splitted.length === 0 || !(angular.isNumber(parsed) && !isNaN(parsed))) {
-              break;
-            }
-          }
-          return name;
-        };
+    DataUtils.prototype.type = function(e) {
+      var name, parsed, splitted;
+      splitted = e.split('/');
+      while (true) {
+        name = splitted.pop();
+        parsed = parseInt(name);
+        if (splitted.length === 0 || !(angular.isNumber(parsed) && !isNaN(parsed))) {
+          break;
+        }
+      }
+      return name;
+    };
 
-        DataUtils.prototype.singularType = function(e) {
-          return this.type(e).replace(/s$/, '');
-        };
+    DataUtils.prototype.singularType = function(e) {
+      return this.type(e).replace(/s$/, '');
+    };
 
-        DataUtils.prototype.classId = function(e) {
-          return this.singularType(e) + 'id';
-        };
+    DataUtils.prototype.classId = function(e) {
+      return this.singularType(e) + 'id';
+    };
 
-        DataUtils.prototype.className = function(e) {
-          return this.capitalize(this.singularType(e));
-        };
+    DataUtils.prototype.className = function(e) {
+      return this.capitalize(this.singularType(e));
+    };
 
-        DataUtils.prototype.socketPath = function(args) {
-          var stars;
-          stars = ['*'];
-          if (args.length % 2 === 1) {
-            stars.push('*');
-          }
-          return args.concat(stars).join('/');
-        };
+    DataUtils.prototype.socketPath = function(args) {
+      var stars;
+      stars = ['*'];
+      if (args.length % 2 === 1) {
+        stars.push('*');
+      }
+      return args.concat(stars).join('/');
+    };
 
-        DataUtils.prototype.restPath = function(args) {
-          return args.slice().join('/');
-        };
+    DataUtils.prototype.restPath = function(args) {
+      return args.slice().join('/');
+    };
 
-        DataUtils.prototype.endpointPath = function(args) {
-          var argsCopy;
-          argsCopy = args.slice();
-          if (argsCopy.length % 2 === 0) {
-            argsCopy.pop();
-          }
-          return argsCopy.join('/');
-        };
-
-        return DataUtils;
-
-      })());
-    }
+    DataUtils.prototype.endpointPath = function(args) {
+      var argsCopy;
+      argsCopy = args.slice();
+      if (argsCopy.length % 2 === 0) {
+        argsCopy.pop();
+      }
+      return argsCopy.join('/');
+    };
 
     return DataUtils;
 

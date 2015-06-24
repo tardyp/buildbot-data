@@ -143,6 +143,9 @@ class Data extends Provider
                     method: method
                     params: params
 
+            getSpecification: ->
+                restService.get('application.spec')
+
             # returns next id for jsonrpc2 control messages
             getNextId: ->
                 @jsonrpc ?= 1
