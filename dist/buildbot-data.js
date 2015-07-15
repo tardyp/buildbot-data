@@ -654,7 +654,7 @@
         };
 
         DataService.prototype.control = function(method, params) {
-          return restService.post({
+          return restService.post('', {
             id: this.getNextId(),
             jsonrpc: '2.0',
             method: method,

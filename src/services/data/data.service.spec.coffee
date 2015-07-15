@@ -79,7 +79,7 @@ describe 'Data service', ->
             method = 'force'
             params = a: 1
             dataService.control(method, params)
-            expect(restService.post).toHaveBeenCalledWith
+            expect(restService.post).toHaveBeenCalledWith '',
                 id: 1
                 jsonrpc: '2.0'
                 method: method
