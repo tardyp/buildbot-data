@@ -137,7 +137,7 @@ class Data extends Provider
                 return null
 
             control: (method, params) ->
-                restService.post
+                restService.post '',
                     id: @getNextId()
                     jsonrpc: '2.0'
                     method: method
