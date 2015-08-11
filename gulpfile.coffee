@@ -28,7 +28,7 @@ c =
     classify:
         appName: 'bbData'
         provider:
-            suffix: 'Service'
+          suffix: 'Service'
 
 paths =
     src: 'src'
@@ -64,6 +64,10 @@ gulp.task 'test', ['bower'], ->
     gulp.src('test')
     .pipe p.karma(c.karma)
 
+gulp.task 'watch', ->
+    if WATCH
+        gulp.watch files.coffee, ['build']
+
 gulp.task 'bower', -> return p.bower()
 
-gulp.task 'default', ['clean', 'test', 'build']
+gulp.task 'default', ['clean', 'test', 'build', 'watch']
