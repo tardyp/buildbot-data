@@ -22,16 +22,16 @@
       $httpProvider.useApplyAsync(true);
 
       /* @ngInject */
-      $httpProvider.interceptors.push(["$log", "API", function($log, API) {
+      $httpProvider.interceptors.push(function($log, API) {
         return {
           request: function(config) {
             if (config.url.indexOf(API) === 0) {
-              $log.debug(config.method + " " + config.url);
+              $log.debug("" + config.method + " " + config.url);
             }
             return config;
           }
         };
-      }]);
+      });
     }
 
     return HttpConfig;
@@ -195,133 +195,8 @@
 }).call(this);
 
 (function() {
-  var Generator,
-    slice = [].slice;
-
-  Generator = (function() {
-    var self;
-
-    self = null;
-
-    function Generator() {
-      self = this;
-    }
-
-    Generator.prototype.number = function(min, max) {
-      var random;
-      if (min == null) {
-        min = 0;
-      }
-      if (max == null) {
-        max = 100;
-      }
-      random = Math.random() * (max - min) + min;
-      return Math.floor(random);
-    };
-
-    Generator.prototype.ids = {};
-
-    Generator.prototype.id = function(name) {
-      var base;
-      if (name == null) {
-        name = '';
-      }
-      if ((base = self.ids)[name] == null) {
-        base[name] = 0;
-      }
-      return self.ids[name]++;
-    };
-
-    Generator.prototype.boolean = function() {
-      return Math.random() < 0.5;
-    };
-
-    Generator.prototype.timestamp = function(after) {
-      var date;
-      if (after == null) {
-        after = Date.now();
-      }
-      date = new Date(after + self.number(1, 1000000));
-      return Math.floor(date.getTime() / 1000);
-    };
-
-    Generator.prototype.string = function(length) {
-      if (length != null) {
-        length++;
-      }
-      return self.number(100, Number.MAX_VALUE).toString(36).substring(0, length);
-    };
-
-    Generator.prototype.array = function() {
-      var args, array, fn, i, j, ref, times;
-      fn = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      times = self.number(1, 10);
-      array = [];
-      for (i = j = 1, ref = times; 1 <= ref ? j <= ref : j >= ref; i = 1 <= ref ? ++j : --j) {
-        array.push(fn.apply(null, args));
-      }
-      return array;
-    };
-
-    return Generator;
-
-  })();
-
-  angular.module('bbData').service('generatorService', [Generator]);
-
-}).call(this);
-
-(function() {
-  var MockData,
-    slice = [].slice;
-
-  MockData = (function() {
-    function MockData($q, SPECIFICATION, generatorService, dataService) {
-      var mockDataService;
-      return new (mockDataService = (function() {
-        function mockDataService() {
-          var method, name;
-          for (name in dataService) {
-            method = dataService[name];
-            if (this[name] == null) {
-              this[name] = method;
-            }
-          }
-        }
-
-        mockDataService.prototype.get = function() {
-          var args, collection, data, promise, query, ref, restPath;
-          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          ref = this.processArguments(args), restPath = ref[0], query = ref[1];
-          if (query.subscribe == null) {
-            query.subscribe = false;
-          }
-          data = [];
-          collection = this.createCollection(restPath, query);
-          collection.from(data);
-          promise = $q.resolve(collection);
-          promise.getArray = function() {
-            return collection;
-          };
-          return promise;
-        };
-
-        return mockDataService;
-
-      })());
-    }
-
-    return MockData;
-
-  })();
-
-  angular.module('bbData').service('mockDataService', ['$q', 'SPECIFICATION', 'generatorService', 'dataService', MockData]);
-
-}).call(this);
-
-(function() {
   var Data,
-    slice = [].slice;
+    __slice = [].slice;
 
   Data = (function() {
     var config;
@@ -369,9 +244,9 @@
         };
 
         DataService.prototype.get = function() {
-          var args, collection, query, ref, restPath;
-          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          ref = this.processArguments(args), restPath = ref[0], query = ref[1];
+          var args, collection, query, restPath, _ref;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          _ref = this.processArguments(args), restPath = _ref[0], query = _ref[1];
           if (query.subscribe == null) {
             query.subscribe = false;
           }
@@ -381,7 +256,7 @@
 
         DataService.prototype.createCollection = function() {
           var args;
-          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
           return (function(func, args, ctor) {
             ctor.prototype = func.prototype;
             var child = new ctor, result = func.apply(child, args);
@@ -424,8 +299,8 @@
               E = dataUtilsService.capitalize(e);
               return _this.prototype["get" + E] = function() {
                 var args;
-                args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-                return self.get.apply(self, [e].concat(slice.call(args)));
+                args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+                return self.get.apply(self, [e].concat(__slice.call(args)));
               };
             };
           })(this));
@@ -474,7 +349,7 @@
                   E = dataUtilsService.capitalize(e);
                   return _this.prototype["get" + E] = function() {
                     var args, last, p;
-                    args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+                    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
                     last = args[args.length - 1];
                     if (angular.isObject(last)) {
                       if (last.subscribe == null) {
@@ -601,9 +476,9 @@
         };
 
         dataUtilsService.prototype.unWrap = function(data, path) {
-          var ref, type;
+          var type, _ref;
           type = this.type(path);
-          type = ((ref = SPECIFICATION[type]) != null ? ref.restField : void 0) || type;
+          type = ((_ref = SPECIFICATION[type]) != null ? _ref.restField : void 0) || type;
           return data[type];
         };
 
@@ -636,6 +511,15 @@
           }
         };
 
+        dataUtilsService.prototype.emailInString = function(string) {
+          var emailRegex;
+          if (!angular.isString(string)) {
+            throw new TypeError("Parameter 'string' must be a string, not " + (typeof string));
+          }
+          emailRegex = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/;
+          return emailRegex.exec(string).pop() || '';
+        };
+
         return dataUtilsService;
 
       })());
@@ -650,8 +534,317 @@
 }).call(this);
 
 (function() {
+  var IndexedDB,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    __slice = [].slice;
+
+  IndexedDB = (function() {
+    function IndexedDB($log, $injector, $q, $window, dataUtilsService, DBSTORES, SPECIFICATION) {
+      var IndexedDBService;
+      return new (IndexedDBService = (function() {
+        function IndexedDBService() {
+          var stores;
+          this.db = new $window.Dexie('BBCache');
+          stores = {};
+          angular.extend(stores, this.processSpecification(SPECIFICATION), DBSTORES);
+          this.db.version(1).stores(stores);
+          this.db.on('error', function(e) {
+            return $log.error(e);
+          });
+          this.open();
+        }
+
+        IndexedDBService.prototype.open = function() {
+          return $q((function(_this) {
+            return function(resolve) {
+              return _this.db.open()["catch"](function(e) {
+                return $log.error('indexedDBService: open', e);
+              })["finally"](function() {
+                return resolve();
+              });
+            };
+          })(this));
+        };
+
+        IndexedDBService.prototype.clear = function() {
+          return $q((function(_this) {
+            return function(resolve) {
+              return _this.db["delete"]()["catch"](function(e) {
+                return $log.error('indexedDBService: clear', e);
+              })["finally"](function() {
+                return _this.open().then(function() {
+                  return resolve();
+                });
+              });
+            };
+          })(this));
+        };
+
+        IndexedDBService.prototype.get = function(url, query) {
+          if (query == null) {
+            query = {};
+          }
+          return $q((function(_this) {
+            return function(resolve, reject) {
+              return _this.processUrl(url).then(function(_arg) {
+                var id, q, table, tableName;
+                tableName = _arg[0], q = _arg[1], id = _arg[2];
+                angular.extend(query, q);
+                if (SPECIFICATION[tableName] == null) {
+                  resolve([]);
+                  return;
+                }
+                table = _this.db[tableName];
+                return _this.db.transaction('r', table, function() {
+                  if (id != null) {
+                    table.get(id).then(function(e) {
+                      return resolve(dataUtilsService.parse(e));
+                    });
+                    return;
+                  }
+                  return table.toArray().then(function(array) {
+                    var fieldAndOperator, fields, filters, limit, offset, order, property, value;
+                    array = array.map(function(e) {
+                      return dataUtilsService.parse(e);
+                    });
+                    filters = [];
+                    for (fieldAndOperator in query) {
+                      value = query[fieldAndOperator];
+                      if (['field', 'limit', 'offset', 'order'].indexOf(fieldAndOperator) < 0) {
+                        filters[fieldAndOperator] = value;
+                      }
+                    }
+                    array = _this.filter(array, filters, tableName);
+                    order = query != null ? query.order : void 0;
+                    array = _this.sort(array, order);
+                    offset = query != null ? query.offset : void 0;
+                    limit = query != null ? query.limit : void 0;
+                    array = _this.paginate(array, offset, limit);
+                    property = query != null ? query.property : void 0;
+                    array = _this.properties(array, property);
+                    fields = query != null ? query.field : void 0;
+                    array = _this.fields(array, fields);
+                    return resolve(array);
+                  });
+                });
+              });
+            };
+          })(this));
+        };
+
+        IndexedDBService.prototype.filter = function(array, filters, tableName) {
+          return array.filter(function(v) {
+            var cmp, field, fieldAndOperator, operator, value, _ref;
+            for (fieldAndOperator in filters) {
+              value = filters[fieldAndOperator];
+              if (['on', 'true', 'yes'].indexOf(value) > -1) {
+                value = true;
+              } else if (['off', 'false', 'no'].indexOf(value) > -1) {
+                value = false;
+              }
+              _ref = fieldAndOperator.split('__'), field = _ref[0], operator = _ref[1];
+              switch (operator) {
+                case 'ne':
+                  cmp = v[field] !== value;
+                  break;
+                case 'lt':
+                  cmp = v[field] < value;
+                  break;
+                case 'le':
+                  cmp = v[field] <= value;
+                  break;
+                case 'gt':
+                  cmp = v[field] > value;
+                  break;
+                case 'ge':
+                  cmp = v[field] >= value;
+                  break;
+                default:
+                  cmp = v[field] === value || (angular.isArray(v[field]) && __indexOf.call(v[field], value) >= 0);
+              }
+              if (!cmp) {
+                return false;
+              }
+            }
+            return true;
+          });
+        };
+
+        IndexedDBService.prototype.sort = function(array, order) {
+          var compare, copy;
+          compare = function(property) {
+            var reverse;
+            if (property[0] === '-') {
+              property = property.slice(1);
+              reverse = true;
+            }
+            return function(a, b) {
+              var _ref;
+              if (reverse) {
+                _ref = [b, a], a = _ref[0], b = _ref[1];
+              }
+              if (a[property] < b[property]) {
+                return -1;
+              } else if (a[property] > b[property]) {
+                return 1;
+              } else {
+                return 0;
+              }
+            };
+          };
+          copy = array.slice(0);
+          if (angular.isString(order)) {
+            copy.sort(compare(order));
+          } else if (angular.isArray(order)) {
+            copy.sort(function(a, b) {
+              var f, o, _i, _len;
+              for (_i = 0, _len = order.length; _i < _len; _i++) {
+                o = order[_i];
+                f = compare(o)(a, b);
+                if (f) {
+                  return f;
+                }
+              }
+              return 0;
+            });
+          }
+          return copy;
+        };
+
+        IndexedDBService.prototype.paginate = function(array, offset, limit) {
+          var end;
+          if (offset == null) {
+            offset = 0;
+          }
+          if (offset >= array.length) {
+            return [];
+          }
+          if ((limit == null) || offset + limit > array.length) {
+            end = array.length;
+          } else {
+            end = offset + limit - 1;
+          }
+          return array.slice(offset, +end + 1 || 9e9);
+        };
+
+        IndexedDBService.prototype.properties = function(array, properties) {
+          return array;
+        };
+
+        IndexedDBService.prototype.fields = function(array, fields) {
+          var element, key, _i, _len;
+          if (fields == null) {
+            return array;
+          }
+          if (!angular.isArray(fields)) {
+            fields = [fields];
+          }
+          for (_i = 0, _len = array.length; _i < _len; _i++) {
+            element = array[_i];
+            for (key in element) {
+              if (__indexOf.call(fields, key) < 0) {
+                delete element[key];
+              }
+            }
+          }
+          return array;
+        };
+
+        IndexedDBService.prototype.processUrl = function(url) {
+          return $q((function(_this) {
+            return function(resolve, reject) {
+              var fieldName, fieldType, fieldValue, id, match, parentFieldName, parentFieldValue, parentId, parentName, path, pathString, query, root, specification, tableName, _ref, _ref1, _ref2, _ref3;
+              _ref = url.split('/'), root = _ref[0], id = _ref[1], path = 3 <= _ref.length ? __slice.call(_ref, 2) : [];
+              specification = SPECIFICATION[root];
+              query = {};
+              if (path.length === 0) {
+                id = dataUtilsService.numberOrString(id);
+                if (angular.isString(id) && specification.identifier) {
+                  query[specification.identifier] = id;
+                  id = null;
+                }
+                resolve([root, query, id]);
+                return;
+              }
+              pathString = path.join('/');
+              match = specification.paths.filter(function(p) {
+                var replaced;
+                replaced = p.replace(RegExp("" + SPECIFICATION.FIELDTYPES.IDENTIFIER + "\\:\\w+", "g"), '[a-zA-Z]+').replace(RegExp("" + SPECIFICATION.FIELDTYPES.NUMBER + "\\:\\w+", "g"), '\\d+');
+                return RegExp("^" + replaced + "$").test(pathString);
+              }).pop();
+              if (match == null) {
+                throw new Error("No child path (" + (path.join('/')) + ") found for root (" + root + ")");
+              }
+              match = match.split('/');
+              if (path.length % 2 === 0) {
+                fieldValue = dataUtilsService.numberOrString(path.pop());
+                _ref1 = match.pop().split(':'), fieldType = _ref1[0], fieldName = _ref1[1];
+              }
+              tableName = path.pop();
+              match.pop();
+              parentFieldValue = dataUtilsService.numberOrString(path.pop() || id);
+              parentFieldName = ((_ref2 = match.pop()) != null ? _ref2.split(':').pop() : void 0) || SPECIFICATION[root].id;
+              parentName = match.pop() || root;
+              parentId = SPECIFICATION[parentName].id;
+              if (fieldName === ((_ref3 = SPECIFICATION[tableName]) != null ? _ref3.id : void 0)) {
+                id = fieldValue;
+                return resolve([tableName, query, id]);
+              } else {
+                if (parentFieldName !== parentId) {
+                  return _this.get(url.split('/').slice(0, -2).join('/')).then(function(array) {
+                    query[parentId] = array[0][parentId];
+                    if (fieldName != null) {
+                      query[fieldName] = fieldValue;
+                    }
+                    return resolve([tableName, query, null]);
+                  });
+                } else {
+                  query[parentFieldName] = parentFieldValue;
+                  if (fieldName != null) {
+                    query[fieldName] = fieldValue;
+                  }
+                  return resolve([tableName, query, null]);
+                }
+              }
+            };
+          })(this));
+        };
+
+        IndexedDBService.prototype.processSpecification = function(specification) {
+          var a, i, name, s, stores;
+          stores = {};
+          for (name in specification) {
+            s = specification[name];
+            if (angular.isArray(s.fields)) {
+              a = s.fields.slice(0);
+              i = a.indexOf(s.id);
+              if (i > -1) {
+                a[i] = "&" + a[i];
+              } else {
+                a.unshift('++id');
+              }
+              stores[name] = a.join(',');
+            }
+          }
+          return stores;
+        };
+
+        return IndexedDBService;
+
+      })());
+    }
+
+    return IndexedDB;
+
+  })();
+
+  angular.module('bbData').service('indexedDBService', ['$log', '$injector', '$q', '$window', 'dataUtilsService', 'DBSTORES', 'SPECIFICATION', IndexedDB]);
+
+}).call(this);
+
+(function() {
   var Rest,
-    slice = [].slice;
+    __slice = [].slice;
 
   Rest = (function() {
     function Rest($http, $q, API) {
@@ -712,7 +905,7 @@
 
         RestService.prototype.parse = function() {
           var args;
-          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
           return args.join('/').replace(/\/\//, '/');
         };
 
@@ -726,317 +919,6 @@
   })();
 
   angular.module('bbData').service('restService', ['$http', '$q', 'API', Rest]);
-
-}).call(this);
-
-(function() {
-  var IndexedDB,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
-    slice = [].slice;
-
-  IndexedDB = (function() {
-    function IndexedDB($log, $injector, $q, $window, dataUtilsService, DBSTORES, SPECIFICATION) {
-      var IndexedDBService;
-      return new (IndexedDBService = (function() {
-        function IndexedDBService() {
-          var stores;
-          this.db = new $window.Dexie('BBCache');
-          stores = {};
-          angular.extend(stores, this.processSpecification(SPECIFICATION), DBSTORES);
-          this.db.version(1).stores(stores);
-          this.db.on('error', function(e) {
-            return $log.error(e);
-          });
-          this.open();
-        }
-
-        IndexedDBService.prototype.open = function() {
-          return $q((function(_this) {
-            return function(resolve) {
-              return _this.db.open()["catch"](function(e) {
-                return $log.error('indexedDBService: open', e);
-              })["finally"](function() {
-                return resolve();
-              });
-            };
-          })(this));
-        };
-
-        IndexedDBService.prototype.clear = function() {
-          return $q((function(_this) {
-            return function(resolve) {
-              return _this.db["delete"]()["catch"](function(e) {
-                return $log.error('indexedDBService: clear', e);
-              })["finally"](function() {
-                return _this.open().then(function() {
-                  return resolve();
-                });
-              });
-            };
-          })(this));
-        };
-
-        IndexedDBService.prototype.get = function(url, query) {
-          if (query == null) {
-            query = {};
-          }
-          return $q((function(_this) {
-            return function(resolve, reject) {
-              return _this.processUrl(url).then(function(arg) {
-                var id, q, table, tableName;
-                tableName = arg[0], q = arg[1], id = arg[2];
-                angular.extend(query, q);
-                if (SPECIFICATION[tableName] == null) {
-                  resolve([]);
-                  return;
-                }
-                table = _this.db[tableName];
-                return _this.db.transaction('r', table, function() {
-                  if (id != null) {
-                    table.get(id).then(function(e) {
-                      return resolve(dataUtilsService.parse(e));
-                    });
-                    return;
-                  }
-                  return table.toArray().then(function(array) {
-                    var fieldAndOperator, fields, filters, limit, offset, order, property, value;
-                    array = array.map(function(e) {
-                      return dataUtilsService.parse(e);
-                    });
-                    filters = [];
-                    for (fieldAndOperator in query) {
-                      value = query[fieldAndOperator];
-                      if (['field', 'limit', 'offset', 'order'].indexOf(fieldAndOperator) < 0) {
-                        filters[fieldAndOperator] = value;
-                      }
-                    }
-                    array = _this.filter(array, filters, tableName);
-                    order = query != null ? query.order : void 0;
-                    array = _this.sort(array, order);
-                    offset = query != null ? query.offset : void 0;
-                    limit = query != null ? query.limit : void 0;
-                    array = _this.paginate(array, offset, limit);
-                    property = query != null ? query.property : void 0;
-                    array = _this.properties(array, property);
-                    fields = query != null ? query.field : void 0;
-                    array = _this.fields(array, fields);
-                    return resolve(array);
-                  });
-                });
-              });
-            };
-          })(this));
-        };
-
-        IndexedDBService.prototype.filter = function(array, filters, tableName) {
-          return array.filter(function(v) {
-            var cmp, field, fieldAndOperator, operator, ref, value;
-            for (fieldAndOperator in filters) {
-              value = filters[fieldAndOperator];
-              if (['on', 'true', 'yes'].indexOf(value) > -1) {
-                value = true;
-              } else if (['off', 'false', 'no'].indexOf(value) > -1) {
-                value = false;
-              }
-              ref = fieldAndOperator.split('__'), field = ref[0], operator = ref[1];
-              switch (operator) {
-                case 'ne':
-                  cmp = v[field] !== value;
-                  break;
-                case 'lt':
-                  cmp = v[field] < value;
-                  break;
-                case 'le':
-                  cmp = v[field] <= value;
-                  break;
-                case 'gt':
-                  cmp = v[field] > value;
-                  break;
-                case 'ge':
-                  cmp = v[field] >= value;
-                  break;
-                default:
-                  cmp = v[field] === value || (angular.isArray(v[field]) && indexOf.call(v[field], value) >= 0);
-              }
-              if (!cmp) {
-                return false;
-              }
-            }
-            return true;
-          });
-        };
-
-        IndexedDBService.prototype.sort = function(array, order) {
-          var compare, copy;
-          compare = function(property) {
-            var reverse;
-            if (property[0] === '-') {
-              property = property.slice(1);
-              reverse = true;
-            }
-            return function(a, b) {
-              var ref;
-              if (reverse) {
-                ref = [b, a], a = ref[0], b = ref[1];
-              }
-              if (a[property] < b[property]) {
-                return -1;
-              } else if (a[property] > b[property]) {
-                return 1;
-              } else {
-                return 0;
-              }
-            };
-          };
-          copy = array.slice(0);
-          if (angular.isString(order)) {
-            copy.sort(compare(order));
-          } else if (angular.isArray(order)) {
-            copy.sort(function(a, b) {
-              var f, j, len, o;
-              for (j = 0, len = order.length; j < len; j++) {
-                o = order[j];
-                f = compare(o)(a, b);
-                if (f) {
-                  return f;
-                }
-              }
-              return 0;
-            });
-          }
-          return copy;
-        };
-
-        IndexedDBService.prototype.paginate = function(array, offset, limit) {
-          var end;
-          if (offset == null) {
-            offset = 0;
-          }
-          if (offset >= array.length) {
-            return [];
-          }
-          if ((limit == null) || offset + limit > array.length) {
-            end = array.length;
-          } else {
-            end = offset + limit - 1;
-          }
-          return array.slice(offset, +end + 1 || 9e9);
-        };
-
-        IndexedDBService.prototype.properties = function(array, properties) {
-          return array;
-        };
-
-        IndexedDBService.prototype.fields = function(array, fields) {
-          var element, j, key, len;
-          if (fields == null) {
-            return array;
-          }
-          if (!angular.isArray(fields)) {
-            fields = [fields];
-          }
-          for (j = 0, len = array.length; j < len; j++) {
-            element = array[j];
-            for (key in element) {
-              if (indexOf.call(fields, key) < 0) {
-                delete element[key];
-              }
-            }
-          }
-          return array;
-        };
-
-        IndexedDBService.prototype.processUrl = function(url) {
-          return $q((function(_this) {
-            return function(resolve, reject) {
-              var fieldName, fieldType, fieldValue, id, match, parentFieldName, parentFieldValue, parentId, parentName, path, pathString, query, ref, ref1, ref2, ref3, root, specification, tableName;
-              ref = url.split('/'), root = ref[0], id = ref[1], path = 3 <= ref.length ? slice.call(ref, 2) : [];
-              specification = SPECIFICATION[root];
-              query = {};
-              if (path.length === 0) {
-                id = dataUtilsService.numberOrString(id);
-                if (angular.isString(id) && specification.identifier) {
-                  query[specification.identifier] = id;
-                  id = null;
-                }
-                resolve([root, query, id]);
-                return;
-              }
-              pathString = path.join('/');
-              match = specification.paths.filter(function(p) {
-                var replaced;
-                replaced = p.replace(RegExp(SPECIFICATION.FIELDTYPES.IDENTIFIER + "\\:\\w+", "g"), '[a-zA-Z]+').replace(RegExp(SPECIFICATION.FIELDTYPES.NUMBER + "\\:\\w+", "g"), '\\d+');
-                return RegExp("^" + replaced + "$").test(pathString);
-              }).pop();
-              if (match == null) {
-                throw new Error("No child path (" + (path.join('/')) + ") found for root (" + root + ")");
-              }
-              match = match.split('/');
-              if (path.length % 2 === 0) {
-                fieldValue = dataUtilsService.numberOrString(path.pop());
-                ref1 = match.pop().split(':'), fieldType = ref1[0], fieldName = ref1[1];
-              }
-              tableName = path.pop();
-              match.pop();
-              parentFieldValue = dataUtilsService.numberOrString(path.pop() || id);
-              parentFieldName = ((ref2 = match.pop()) != null ? ref2.split(':').pop() : void 0) || SPECIFICATION[root].id;
-              parentName = match.pop() || root;
-              parentId = SPECIFICATION[parentName].id;
-              if (fieldName === ((ref3 = SPECIFICATION[tableName]) != null ? ref3.id : void 0)) {
-                id = fieldValue;
-                return resolve([tableName, query, id]);
-              } else {
-                if (parentFieldName !== parentId) {
-                  return _this.get(url.split('/').slice(0, -2).join('/')).then(function(array) {
-                    query[parentId] = array[0][parentId];
-                    if (fieldName != null) {
-                      query[fieldName] = fieldValue;
-                    }
-                    return resolve([tableName, query, null]);
-                  });
-                } else {
-                  query[parentFieldName] = parentFieldValue;
-                  if (fieldName != null) {
-                    query[fieldName] = fieldValue;
-                  }
-                  return resolve([tableName, query, null]);
-                }
-              }
-            };
-          })(this));
-        };
-
-        IndexedDBService.prototype.processSpecification = function(specification) {
-          var a, i, name, s, stores;
-          stores = {};
-          for (name in specification) {
-            s = specification[name];
-            if (angular.isArray(s.fields)) {
-              a = s.fields.map(function(e) {
-                return e.split(':')[0];
-              });
-              i = a.indexOf(s.id);
-              if (i > -1) {
-                a[i] = "&" + a[i];
-              } else {
-                a.unshift('++id');
-              }
-              stores[name] = a.join(',');
-            }
-          }
-          return stores;
-        };
-
-        return IndexedDBService;
-
-      })());
-    }
-
-    return IndexedDB;
-
-  })();
-
-  angular.module('bbData').service('indexedDBService', ['$log', '$injector', '$q', '$window', 'dataUtilsService', 'DBSTORES', 'SPECIFICATION', IndexedDB]);
 
 }).call(this);
 
@@ -1068,19 +950,19 @@
           })(this);
           this.socket.onmessage = (function(_this) {
             return function(message) {
-              var code, data, e, error, id, key, ref, ref1, ref2, ref3;
+              var code, data, e, error, id, key, _ref, _ref1, _ref2, _ref3;
               try {
                 data = angular.fromJson(message.data);
                 $log.debug('WS message', data);
                 if (data._id != null) {
-                  ref = [data.msg, data.error, data._id, data.code], message = ref[0], error = ref[1], id = ref[2], code = ref[3];
+                  _ref = [data.msg, data.error, data._id, data.code], message = _ref[0], error = _ref[1], id = _ref[2], code = _ref[3];
                   if (code === 200) {
-                    return (ref1 = _this.deferred[id]) != null ? ref1.resolve(message) : void 0;
+                    return (_ref1 = _this.deferred[id]) != null ? _ref1.resolve(message) : void 0;
                   } else {
-                    return (ref2 = _this.deferred[id]) != null ? ref2.reject(error) : void 0;
+                    return (_ref2 = _this.deferred[id]) != null ? _ref2.reject(error) : void 0;
                   }
                 } else {
-                  ref3 = [data.k, data.m], key = ref3[0], message = ref3[1];
+                  _ref3 = [data.k, data.m], key = _ref3[0], message = _ref3[1];
                   return typeof _this.onMessage === "function" ? _this.onMessage(key, message) : void 0;
                 }
               } catch (_error) {
@@ -1097,16 +979,16 @@
         };
 
         SocketService.prototype.close = function() {
-          var ref;
-          return (ref = this.socket) != null ? ref.close() : void 0;
+          var _ref;
+          return (_ref = this.socket) != null ? _ref.close() : void 0;
         };
 
         SocketService.prototype.send = function(data) {
-          var base, id;
+          var id, _base;
           id = this.nextId();
           data._id = id;
-          if ((base = this.deferred)[id] == null) {
-            base[id] = $q.defer();
+          if ((_base = this.deferred)[id] == null) {
+            _base[id] = $q.defer();
           }
           data = angular.toJson(data);
           if (this.socket.readyState === (this.socket.OPEN || 1)) {
@@ -1119,13 +1001,13 @@
         };
 
         SocketService.prototype.flush = function() {
-          var data, results;
-          results = [];
+          var data, _results;
+          _results = [];
           while (data = this.queue.shift()) {
             $log.debug('WS send', angular.fromJson(data));
-            results.push(this.socket.send(data));
+            _results.push(this.socket.send(data));
           }
-          return results;
+          return _results;
         };
 
         SocketService.prototype.nextId = function() {
@@ -1168,9 +1050,9 @@
 
 (function() {
   var Tabex,
-    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
-    slice = [].slice;
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    __slice = [].slice;
 
   Tabex = (function() {
     function Tabex($log, $window, $q, $timeout, socketService, restService, dataUtilsService, indexedDBService, SPECIFICATION) {
@@ -1201,10 +1083,10 @@
         TabexService.prototype.client = $window.tabex.client();
 
         function TabexService() {
-          this.closeHandler = bind(this.closeHandler, this);
-          this.messageHandler = bind(this.messageHandler, this);
-          this.refreshHandler = bind(this.refreshHandler, this);
-          this.masterHandler = bind(this.masterHandler, this);
+          this.closeHandler = __bind(this.closeHandler, this);
+          this.messageHandler = __bind(this.messageHandler, this);
+          this.refreshHandler = __bind(this.refreshHandler, this);
+          this.masterHandler = __bind(this.masterHandler, this);
           socketService.onMessage = this.messageHandler;
           socketService.onClose = this.closeHandler;
           this.initialRoleDeferred = $q.defer();
@@ -1258,17 +1140,17 @@
           return this.timeoutPromise = $timeout((function(_this) {
             return function() {
               return _this.activatePaths().then(function() {
-                var channel, channels, e, l, len, name1, paths, r;
+                var channel, channels, e, paths, r, _i, _len, _name;
                 channels = data.channels.filter(function(c) {
                   return c.indexOf('!sys.') !== 0;
                 });
                 paths = {};
-                for (l = 0, len = channels.length; l < len; l++) {
-                  channel = channels[l];
+                for (_i = 0, _len = channels.length; _i < _len; _i++) {
+                  channel = channels[_i];
                   try {
                     r = angular.fromJson(channel);
-                    if (paths[name1 = r.path] == null) {
-                      paths[name1] = [];
+                    if (paths[_name = r.path] == null) {
+                      paths[_name] = [];
                     }
                     paths[r.path].push(r.query);
                   } catch (_error) {
@@ -1294,8 +1176,8 @@
         };
 
         TabexService.prototype.messageHandler = function(key, message) {
-          var event, id, ref, type;
-          ref = key.split('/').slice(-3), type = ref[0], id = ref[1], event = ref[2];
+          var event, id, type, _ref;
+          _ref = key.split('/').slice(-3), type = _ref[0], id = _ref[1], event = _ref[2];
           if (event === 'new') {
             event = EVENTS.NEW;
           } else {
@@ -1303,25 +1185,25 @@
           }
           return indexedDBService.db[type].put(message).then((function(_this) {
             return function() {
-              var path, query, results;
-              results = [];
+              var path, query, _results;
+              _results = [];
               for (path in _this.trackedPaths) {
                 if (RegExp("^" + (path.replace(/\*/g, '(\\w+|\\d+)')) + "$").test(key)) {
-                  results.push((function() {
-                    var l, len, ref1, results1;
-                    ref1 = this.trackedPaths[path];
-                    results1 = [];
-                    for (l = 0, len = ref1.length; l < len; l++) {
-                      query = ref1[l];
-                      results1.push(this.emit(path, query, event));
+                  _results.push((function() {
+                    var _i, _len, _ref1, _results1;
+                    _ref1 = this.trackedPaths[path];
+                    _results1 = [];
+                    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                      query = _ref1[_i];
+                      _results1.push(this.emit(path, query, event));
                     }
-                    return results1;
+                    return _results1;
                   }).call(_this));
                 } else {
-                  results.push(void 0);
+                  _results.push(void 0);
                 }
               }
-              return results;
+              return _results;
             };
           })(this));
         };
@@ -1338,21 +1220,21 @@
           db = indexedDBService.db;
           return db.paths.toArray().then((function(_this) {
             return function(dbPaths) {
-              var path, queries, query, results;
-              results = [];
+              var path, queries, query, _results;
+              _results = [];
               for (path in paths) {
                 queries = paths[path];
-                results.push((function() {
-                  var l, len, results1;
-                  results1 = [];
-                  for (l = 0, len = queries.length; l < len; l++) {
-                    query = queries[l];
-                    results1.push(this.load(path, query, dbPaths));
+                _results.push((function() {
+                  var _i, _len, _results1;
+                  _results1 = [];
+                  for (_i = 0, _len = queries.length; _i < _len; _i++) {
+                    query = queries[_i];
+                    _results1.push(this.load(path, query, dbPaths));
                   }
-                  return results1;
+                  return _results1;
                 }).call(_this));
               }
-              return results;
+              return _results;
             };
           })(this));
         };
@@ -1363,7 +1245,7 @@
           }
           return $q((function(_this) {
             return function(resolve, reject) {
-              var active, db, elapsed, inCache, item, l, len, parentId, parentIdName, parentName, ref, ref1, restPath, specification, t, tracking;
+              var active, db, elapsed, inCache, item, parentId, parentIdName, parentName, restPath, specification, t, tracking, _i, _len, _ref, _ref1;
               db = indexedDBService.db;
               tracking = {
                 path: path,
@@ -1371,8 +1253,8 @@
               };
               t = dataUtilsService.type(path);
               specification = _this.getSpecification(t);
-              for (l = 0, len = dbPaths.length; l < len; l++) {
-                item = dbPaths[l];
+              for (_i = 0, _len = dbPaths.length; _i < _len; _i++) {
+                item = dbPaths[_i];
                 inCache = item.path === tracking.path && item.query === tracking.query;
                 elapsed = new Date() - new Date(item.lastActive);
                 active = elapsed < 2000 || specification["static"] === true;
@@ -1382,8 +1264,8 @@
                 }
               }
               restPath = dataUtilsService.restPath(path);
-              ref = _this.getParent(restPath), parentName = ref[0], parentId = ref[1];
-              parentIdName = (ref1 = SPECIFICATION[parentName]) != null ? ref1.id : void 0;
+              _ref = _this.getParent(restPath), parentName = _ref[0], parentId = _ref[1];
+              parentIdName = (_ref1 = SPECIFICATION[parentName]) != null ? _ref1.id : void 0;
               return restService.get(restPath, query).then(function(data) {
                 var type;
                 type = dataUtilsService.type(restPath);
@@ -1393,8 +1275,8 @@
                     data = [data];
                   }
                   return data.forEach(function(i) {
-                    var id, idName, put, ref2;
-                    idName = (ref2 = SPECIFICATION[type]) != null ? ref2.id : void 0;
+                    var id, idName, put, _ref2;
+                    idName = (_ref2 = SPECIFICATION[type]) != null ? _ref2.id : void 0;
                     id = i[idName];
                     put = function() {
                       var k, v;
@@ -1415,7 +1297,7 @@
                       return db[type].get(id).then(function(e) {
                         e = dataUtilsService.parse(e);
                         if ((e != null) && (parentIdName != null) && angular.isArray(e[parentIdName])) {
-                          if (indexOf.call(e[parentIdName], parentId) < 0) {
+                          if (__indexOf.call(e[parentIdName], parentId) < 0) {
                             return i[parentIdName] = e[parentIdName].concat(parentId);
                           } else {
                             return i[parentIdName] = e[parentIdName];
@@ -1472,31 +1354,31 @@
           db = indexedDBService.db;
           return db.transaction('rw', db.paths, (function(_this) {
             return function() {
-              var now, path, queries, query, results;
+              var now, path, queries, query, _results;
               now = (new Date()).toString();
-              results = [];
+              _results = [];
               for (path in paths) {
                 queries = paths[path];
-                results.push((function() {
-                  var l, len, results1;
-                  results1 = [];
-                  for (l = 0, len = queries.length; l < len; l++) {
-                    query = queries[l];
-                    results1.push(db.paths.where('[path+query]').equals([path, angular.toJson(query)]).modify({
+                _results.push((function() {
+                  var _i, _len, _results1;
+                  _results1 = [];
+                  for (_i = 0, _len = queries.length; _i < _len; _i++) {
+                    query = queries[_i];
+                    _results1.push(db.paths.where('[path+query]').equals([path, angular.toJson(query)]).modify({
                       'lastActive': now
                     }));
                   }
-                  return results1;
+                  return _results1;
                 })());
               }
-              return results;
+              return _results;
             };
           })(this));
         };
 
         TabexService.prototype.on = function() {
-          var channel, l, listener, options, path, query, subscribe;
-          options = 2 <= arguments.length ? slice.call(arguments, 0, l = arguments.length - 1) : (l = 0, []), listener = arguments[l++];
+          var channel, listener, options, path, query, subscribe, _i;
+          options = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), listener = arguments[_i++];
           path = options[0], query = options[1];
           query = angular.copy(query) || {};
           subscribe = query.subscribe;
@@ -1515,8 +1397,8 @@
         };
 
         TabexService.prototype.off = function() {
-          var channel, l, listener, options, path, query;
-          options = 2 <= arguments.length ? slice.call(arguments, 0, l = arguments.length - 1) : (l = 0, []), listener = arguments[l++];
+          var channel, listener, options, path, query, _i;
+          options = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), listener = arguments[_i++];
           path = options[0], query = options[1];
           query = angular.copy(query) || {};
           delete query.subscribe;
@@ -1528,8 +1410,8 @@
         };
 
         TabexService.prototype.emit = function() {
-          var channel, l, message, options, path, query;
-          options = 2 <= arguments.length ? slice.call(arguments, 0, l = arguments.length - 1) : (l = 0, []), message = arguments[l++];
+          var channel, message, options, path, query, _i;
+          options = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), message = arguments[_i++];
           path = options[0], query = options[1];
           channel = {
             path: path,
@@ -1553,7 +1435,7 @@
         };
 
         TabexService.prototype.startConsumingAll = function(paths) {
-          var i, j, l, len, len1, len2, len3, m, n, o, p, path, pathsToRemove, promises, q, r, socketPaths;
+          var i, j, p, path, pathsToRemove, promises, q, r, socketPaths, _i, _j, _k, _l, _len, _len1, _len2, _len3;
           if (angular.isArray(paths)) {
             socketPaths = paths.slice(0);
           } else if (angular.isObject(paths)) {
@@ -1562,23 +1444,23 @@
             throw new Error('Parameter paths is not an object or an array');
           }
           pathsToRemove = [];
-          for (i = l = 0, len = socketPaths.length; l < len; i = ++l) {
+          for (i = _i = 0, _len = socketPaths.length; _i < _len; i = ++_i) {
             p = socketPaths[i];
             r = RegExp("^" + (p.replace(/\*/g, '(\\w+|\\d+|\\*)')) + "$");
-            for (j = m = 0, len1 = socketPaths.length; m < len1; j = ++m) {
+            for (j = _j = 0, _len1 = socketPaths.length; _j < _len1; j = ++_j) {
               q = socketPaths[j];
               if (j !== i && r.test(q)) {
                 pathsToRemove.push(q);
               }
             }
           }
-          for (n = 0, len2 = pathsToRemove.length; n < len2; n++) {
-            p = pathsToRemove[n];
+          for (_k = 0, _len2 = pathsToRemove.length; _k < _len2; _k++) {
+            p = pathsToRemove[_k];
             socketPaths.splice(socketPaths.indexOf(p), 1);
           }
           promises = [];
-          for (o = 0, len3 = socketPaths.length; o < len3; o++) {
-            path = socketPaths[o];
+          for (_l = 0, _len3 = socketPaths.length; _l < _len3; _l++) {
+            path = socketPaths[_l];
             if (!(path in this.trackedPaths)) {
               this.consuming[path] = true;
               promises.push(this.startConsuming(path));
@@ -1588,30 +1470,30 @@
         };
 
         TabexService.prototype.mergePaths = function(dest, src) {
-          var path, queries, query, results;
-          results = [];
+          var path, queries, query, _results;
+          _results = [];
           for (path in src) {
             queries = src[path];
             if (dest[path] == null) {
               dest[path] = [];
             }
-            results.push((function() {
-              var l, len, results1;
-              results1 = [];
-              for (l = 0, len = queries.length; l < len; l++) {
-                query = queries[l];
+            _results.push((function() {
+              var _i, _len, _results1;
+              _results1 = [];
+              for (_i = 0, _len = queries.length; _i < _len; _i++) {
+                query = queries[_i];
                 if (dest[path].filter(function(e) {
                   return angular.equals(e, query);
                 }).length === 0) {
-                  results1.push(dest[path].push(query));
+                  _results1.push(dest[path].push(query));
                 } else {
-                  results1.push(void 0);
+                  _results1.push(void 0);
                 }
               }
-              return results1;
+              return _results1;
             })());
           }
-          return results;
+          return _results;
         };
 
         return TabexService;
@@ -1629,23 +1511,23 @@
 
 (function() {
   var Collection,
-    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Collection = (function() {
     function Collection($q, $injector, $log, dataUtilsService, tabexService, indexedDBService, SPECIFICATION) {
       var CollectionInstance;
-      return CollectionInstance = (function(superClass) {
-        extend(CollectionInstance, superClass);
+      return CollectionInstance = (function(_super) {
+        __extends(CollectionInstance, _super);
 
         function CollectionInstance(restPath, query) {
           var Wrapper, ready;
           if (query == null) {
             query = {};
           }
-          this.listener = bind(this.listener, this);
+          this.listener = __bind(this.listener, this);
           this.getRestPath = function() {
             return restPath;
           };
@@ -1723,9 +1605,9 @@
         };
 
         CollectionInstance.prototype.readyHandler = function(data) {
-          var ref;
+          var _ref;
           this.from(data);
-          return (ref = this.getReadyDeferred()) != null ? ref.resolve(this) : void 0;
+          return (_ref = this.getReadyDeferred()) != null ? _ref.resolve(this) : void 0;
         };
 
         CollectionInstance.prototype.newHandler = function(data) {
@@ -1741,16 +1623,16 @@
           };
           data.forEach((function(_this) {
             return function(e) {
-              var ref;
-              if (ref = e[id], indexOf.call(ids.old, ref) < 0) {
+              var _ref;
+              if (_ref = e[id], __indexOf.call(ids.old, _ref) < 0) {
                 return _this.add(e);
               }
             };
           })(this));
           return this.forEach((function(_this) {
             return function(e) {
-              var ref;
-              if (ref = e[id], indexOf.call(ids["new"], ref) < 0) {
+              var _ref;
+              if (_ref = e[id], __indexOf.call(ids["new"], _ref) < 0) {
                 return _this["delete"](e);
               }
             };
@@ -1758,29 +1640,29 @@
         };
 
         CollectionInstance.prototype.updateHandler = function(data) {
-          var e, id, j, len, results;
+          var e, id, _i, _len, _results;
           this.newHandler(data);
           id = this.getSpecification().id;
-          results = [];
-          for (j = 0, len = data.length; j < len; j++) {
-            e = data[j];
-            results.push(this.forEach(function(i) {
+          _results = [];
+          for (_i = 0, _len = data.length; _i < _len; _i++) {
+            e = data[_i];
+            _results.push(this.forEach(function(i) {
               if (e[id] === i[id]) {
                 return i.update(e);
               }
             }));
           }
-          return results;
+          return _results;
         };
 
         CollectionInstance.prototype.from = function(data) {
-          var i, j, len, results;
-          results = [];
-          for (j = 0, len = data.length; j < len; j++) {
-            i = data[j];
-            results.push(this.add(i));
+          var i, _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = data.length; _i < _len; _i++) {
+            i = data[_i];
+            _results.push(this.add(i));
           }
-          return results;
+          return _results;
         };
 
         CollectionInstance.prototype.add = function(element) {
@@ -1791,12 +1673,12 @@
         };
 
         CollectionInstance.prototype.clear = function() {
-          var results;
-          results = [];
+          var _results;
+          _results = [];
           while (this.length > 0) {
-            results.push(this.pop());
+            _results.push(this.pop());
           }
-          return results;
+          return _results;
         };
 
         CollectionInstance.prototype["delete"] = function(element) {
@@ -1822,7 +1704,7 @@
 
 (function() {
   var Wrapper,
-    slice = [].slice;
+    __slice = [].slice;
 
   Wrapper = (function() {
     function Wrapper($log, dataService, dataUtilsService, tabexService, SPECIFICATION) {
@@ -1846,17 +1728,17 @@
         };
 
         WrapperInstance.prototype.get = function() {
-          var args, e, fieldName, fieldType, i, id, j, last, match, options, parameter, path, pathString, ref, ref1, ref2, root, specification;
-          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          ref = this.getEndpoint().split('/'), root = ref[0], id = ref[1], path = 3 <= ref.length ? slice.call(ref, 2) : [];
-          options = 2 <= args.length ? slice.call(args, 0, i = args.length - 1) : (i = 0, []), last = args[i++];
+          var args, e, fieldName, fieldType, id, last, match, options, parameter, path, pathString, root, specification, _i, _j, _ref, _ref1, _ref2;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          _ref = this.getEndpoint().split('/'), root = _ref[0], id = _ref[1], path = 3 <= _ref.length ? __slice.call(_ref, 2) : [];
+          options = 2 <= args.length ? __slice.call(args, 0, _i = args.length - 1) : (_i = 0, []), last = args[_i++];
           if (angular.isObject(last)) {
             pathString = path.concat('*', options).join('/');
           } else {
             pathString = path.concat('*', args).join('/');
           }
           if (path.length === 0) {
-            return dataService.get.apply(dataService, [this.getEndpoint(), this.getId()].concat(slice.call(args)));
+            return dataService.get.apply(dataService, [this.getEndpoint(), this.getId()].concat(__slice.call(args)));
           }
           specification = SPECIFICATION[root];
           match = specification.paths.filter(function(p) {
@@ -1866,39 +1748,43 @@
           }).pop();
           if (match == null) {
             parameter = this.getId();
-            $log.debug(specification.paths, pathString);
           } else {
-            ref1 = match.split('/');
-            for (j = ref1.length - 1; j >= 0; j += -1) {
-              e = ref1[j];
+            _ref1 = match.split('/').slice(0, -1);
+            for (_j = _ref1.length - 1; _j >= 0; _j += -1) {
+              e = _ref1[_j];
               if (e.indexOf(':') > -1) {
-                ref2 = e.split(':'), fieldType = ref2[0], fieldName = ref2[1];
+                _ref2 = e.split(':'), fieldType = _ref2[0], fieldName = _ref2[1];
                 parameter = this[fieldName];
                 break;
               }
             }
           }
-          return dataService.get.apply(dataService, [this.getEndpoint(), parameter].concat(slice.call(args)));
+          return dataService.get.apply(dataService, [this.getEndpoint(), parameter].concat(__slice.call(args)));
         };
 
         WrapperInstance.prototype.control = function(method, params) {
-          return dataService.control(this.getEndpoint(), method, params);
+          return dataService.control("" + (this.getEndpoint()) + "/" + (this.getIdentifier() || this.getId()), method, params);
         };
 
         WrapperInstance.generateFunctions = function(endpoints) {
           return endpoints.forEach((function(_this) {
             return function(e) {
-              var E;
+              var E, _base, _base1, _name, _name1;
+              if (e === e.toUpperCase()) {
+                return;
+              }
               E = dataUtilsService.capitalize(e);
-              _this.prototype["get" + E] = function() {
-                var args;
-                args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-                return this.get.apply(this, [e].concat(slice.call(args)));
-              };
-              return _this.prototype["load" + E] = function() {
+              if ((_base = _this.prototype)[_name = "get" + E] == null) {
+                _base[_name] = function() {
+                  var args;
+                  args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+                  return this.get.apply(this, [e].concat(__slice.call(args)));
+                };
+              }
+              return (_base1 = _this.prototype)[_name1 = "load" + E] != null ? _base1[_name1] : _base1[_name1] = function() {
                 var args, p;
-                args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-                p = this.get.apply(this, [e].concat(slice.call(args)));
+                args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+                p = this.get.apply(this, [e].concat(__slice.call(args)));
                 this[e] = p.getArray();
                 return p;
               };
@@ -1923,13 +1809,13 @@
         };
 
         WrapperInstance.prototype.unsubscribe = function() {
-          var _, e, results;
-          results = [];
+          var e, _, _results;
+          _results = [];
           for (_ in this) {
             e = this[_];
-            results.push(e != null ? typeof e.unsubscribe === "function" ? e.unsubscribe() : void 0 : void 0);
+            _results.push(e != null ? typeof e.unsubscribe === "function" ? e.unsubscribe() : void 0 : void 0);
           }
-          return results;
+          return _results;
         };
 
         return WrapperInstance;
@@ -1944,3 +1830,5 @@
   angular.module('bbData').factory('Wrapper', ['$log', 'dataService', 'dataUtilsService', 'tabexService', 'SPECIFICATION', Wrapper]);
 
 }).call(this);
+
+//# sourceMappingURL=scripts.js.map

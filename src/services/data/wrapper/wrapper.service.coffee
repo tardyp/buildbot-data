@@ -34,10 +34,9 @@ class Wrapper extends Factory
                 .pop()
                 if not match?
                     parameter = @getId()
-                    $log.debug specification.paths, pathString
                 else
                     # second last element
-                    for e in match.split('/') by -1
+                    for e in match.split('/')[...-1] by -1
                         if e.indexOf(':') > -1
                             [fieldType, fieldName] = e.split(':')
                             parameter = @[fieldName]
@@ -46,18 +45,19 @@ class Wrapper extends Factory
                 dataService.get(@getEndpoint(), parameter, args...)
 
             control: (method, params) ->
-                dataService.control(@getEndpoint(), method, params)
+                dataService.control("#{@getEndpoint()}/#{@getIdentifier() or @getId()}", method, params)
 
             # generate endpoint functions for the class
             @generateFunctions: (endpoints) ->
                 endpoints.forEach (e) =>
+                    if e == e.toUpperCase() then return
                     # capitalize endpoint names
                     E = dataUtilsService.capitalize(e)
                     # adds getXXX functions to the prototype
-                    @::["get#{E}"] = (args...) ->
+                    @::["get#{E}"] ?= (args...) ->
                         return @get(e, args...)
                     # adds loadXXX functions to the prototype
-                    @::["load#{E}"] = (args...) ->
+                    @::["load#{E}"] ?= (args...) ->
                         p = @get(e, args...)
                         @[e] = p.getArray()
                         return p
