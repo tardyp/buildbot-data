@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = '~1.4.4'
+ANGULAR_TAG = '~1.4.6'
 
 gulp = require('gulp')
 

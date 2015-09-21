@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.4.4
+ * @license AngularJS v1.4.6
  * (c) 2010-2015 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -94,7 +94,7 @@ angular.mock.$Browser = function() {
       if (fn.id === deferId) fnIndex = index;
     });
 
-    if (fnIndex !== undefined) {
+    if (angular.isDefined(fnIndex)) {
       self.deferredFns.splice(fnIndex, 1);
       return true;
     }
@@ -469,7 +469,7 @@ angular.mock.$IntervalProvider = function() {
             if (fn.id === promise.$$intervalId) fnIndex = index;
           });
 
-          if (fnIndex !== undefined) {
+          if (angular.isDefined(fnIndex)) {
             repeatFns.splice(fnIndex, 1);
           }
         }
@@ -511,7 +511,7 @@ angular.mock.$IntervalProvider = function() {
         if (fn.id === promise.$$intervalId) fnIndex = index;
       });
 
-      if (fnIndex !== undefined) {
+      if (angular.isDefined(fnIndex)) {
         repeatFns[fnIndex].deferred.reject('canceled');
         repeatFns.splice(fnIndex, 1);
         return true;
@@ -770,25 +770,62 @@ angular.mock.animate = angular.module('ngAnimateMock', ['ng'])
       return reflowFn;
     });
 
-    $provide.decorator('$animate', ['$delegate', '$timeout', '$browser', '$$rAF', '$$forceReflow',
-                            function($delegate,   $timeout,   $browser,   $$rAF,   $$forceReflow) {
+    $provide.factory('$$animateAsyncRun', function() {
+      var queue = [];
+      var queueFn = function() {
+        return function(fn) {
+          queue.push(fn);
+        };
+      };
+      queueFn.flush = function() {
+        if (queue.length === 0) return false;
 
+        for (var i = 0; i < queue.length; i++) {
+          queue[i]();
+        }
+        queue = [];
+
+        return true;
+      };
+      return queueFn;
+    });
+
+    $provide.decorator('$animate', ['$delegate', '$timeout', '$browser', '$$rAF',
+                                    '$$forceReflow', '$$animateAsyncRun', '$rootScope',
+                            function($delegate,   $timeout,   $browser,   $$rAF,
+                                     $$forceReflow,   $$animateAsyncRun,  $rootScope) {
       var animate = {
         queue: [],
         cancel: $delegate.cancel,
+        on: $delegate.on,
+        off: $delegate.off,
+        pin: $delegate.pin,
         get reflows() {
           return $$forceReflow.totalReflows;
         },
         enabled: $delegate.enabled,
-        triggerCallbackEvents: function() {
-          $$rAF.flush();
-        },
-        triggerCallbackPromise: function() {
-          $timeout.flush(0);
-        },
-        triggerCallbacks: function() {
-          this.triggerCallbackEvents();
-          this.triggerCallbackPromise();
+        flush: function() {
+          $rootScope.$digest();
+
+          var doNextRun, somethingFlushed = false;
+          do {
+            doNextRun = false;
+
+            if ($$rAF.queue.length) {
+              $$rAF.flush();
+              doNextRun = somethingFlushed = true;
+            }
+
+            if ($$animateAsyncRun.flush()) {
+              doNextRun = somethingFlushed = true;
+            }
+          } while (doNextRun);
+
+          if (!somethingFlushed) {
+            throw new Error('No pending animations ready to be closed or flushed');
+          }
+
+          $rootScope.$digest();
         }
       };
 
@@ -1005,7 +1042,7 @@ angular.mock.dump = function(object) {
       $http.post('/add-msg.py', message, { headers: headers } ).success(function(response) {
         $scope.status = '';
       }).error(function() {
-        $scope.status = 'ERROR!';
+        $scope.status = 'Failed...';
       });
     };
   }
@@ -1740,28 +1777,28 @@ angular.mock.$TimeoutDecorator = ['$delegate', '$browser', function($delegate, $
 }];
 
 angular.mock.$RAFDecorator = ['$delegate', function($delegate) {
-  var queue = [];
   var rafFn = function(fn) {
-    var index = queue.length;
-    queue.push(fn);
+    var index = rafFn.queue.length;
+    rafFn.queue.push(fn);
     return function() {
-      queue.splice(index, 1);
+      rafFn.queue.splice(index, 1);
     };
   };
 
+  rafFn.queue = [];
   rafFn.supported = $delegate.supported;
 
   rafFn.flush = function() {
-    if (queue.length === 0) {
+    if (rafFn.queue.length === 0) {
       throw new Error('No rAF callbacks present');
     }
 
-    var length = queue.length;
+    var length = rafFn.queue.length;
     for (var i = 0; i < length; i++) {
-      queue[i]();
+      rafFn.queue[i]();
     }
 
-    queue = queue.slice(i);
+    rafFn.queue = rafFn.queue.slice(i);
   };
 
   return rafFn;
@@ -1809,7 +1846,7 @@ angular.mock.$RootElementProvider = function() {
  *
  * describe('myDirectiveController', function() {
  *   it('should write the bound name to the log', inject(function($controller, $log) {
- *     var ctrl = $controller('MyDirective', { /* no locals &#42;/ }, { name: 'Clark Kent' });
+ *     var ctrl = $controller('MyDirectiveController', { /* no locals &#42;/ }, { name: 'Clark Kent' });
  *     expect(ctrl.name).toEqual('Clark Kent');
  *     expect($log.info.logs).toEqual(['Clark Kent']);
  *   });
@@ -2443,10 +2480,10 @@ if (window.jasmine || window.mocha) {
       _dataServiceProvider = dataServiceProvider;
       $provide.constant('SPECIFICATION', {
         asd: {
-          root: true
+          id: 'asdid'
         },
         bsd: {
-          root: false
+          paths: []
         }
       });
       return $provide.constant('$state', new (State = (function() {
@@ -2474,7 +2511,7 @@ if (window.jasmine || window.mocha) {
     it('`s cache should be true', function() {
       return expect(dataService.cache).toBeTruthy();
     });
-    it('should generate functions for every root in the specification', function() {
+    it('should generate functions for every endpoint in the specification', function() {
       expect(dataService.getAsd).toBeDefined();
       expect(angular.isFunction(dataService.getAsd)).toBeTruthy();
       expect(dataService.getBsd).not.toBeDefined();
@@ -2537,7 +2574,7 @@ if (window.jasmine || window.mocha) {
         });
       });
     });
-    return describe('control(url, method, params)', function() {
+    describe('control(url, method, params)', function() {
       it('should make a POST call', function() {
         var cb, method, params, url;
         spyOn(restService, 'post').and.returnValue($q.resolve());
@@ -2559,7 +2596,7 @@ if (window.jasmine || window.mocha) {
         $rootScope.$apply();
         return expect(cb).toHaveBeenCalled();
       });
-      it('should change the id on each call', function() {
+      return it('should change the id on each call', function() {
         var id1, id2, method, url;
         spyOn(restService, 'post');
         url = 'forceschedulers/force';
@@ -2570,70 +2607,70 @@ if (window.jasmine || window.mocha) {
         id2 = restService.post.calls.argsFor(1)[1].id;
         return expect(id1).not.toEqual(id2);
       });
-      return describe('open(scope)', function() {
-        it('should return a class with close, closeOnDestroy and getXXX functions', function() {
-          var dataAccessor, scope;
-          scope = $rootScope.$new();
-          dataAccessor = dataService.open(scope);
-          expect(angular.isFunction(dataAccessor.close)).toBeTruthy();
-          return expect(angular.isFunction(dataAccessor.closeOnDestroy)).toBeTruthy();
+    });
+    return describe('open(scope)', function() {
+      it('should return a class with close, closeOnDestroy and getXXX functions', function() {
+        var dataAccessor, scope;
+        scope = $rootScope.$new();
+        dataAccessor = dataService.open(scope);
+        expect(angular.isFunction(dataAccessor.close)).toBeTruthy();
+        return expect(angular.isFunction(dataAccessor.closeOnDestroy)).toBeTruthy();
+      });
+      it('should generate functions for every endpoint in the specification', function() {
+        var dataAccessor;
+        dataAccessor = dataService.open();
+        expect(dataAccessor.getAsd).toBeDefined();
+        expect(angular.isFunction(dataAccessor.getAsd)).toBeTruthy();
+        expect(dataAccessor.getBsd).not.toBeDefined();
+        expect(angular.isFunction(dataAccessor.getBsd)).toBeFalsy();
+        spyOn(dataService, 'get').and.callThrough();
+        dataAccessor.getAsd(1);
+        dataAccessor.getAsd(2, {
+          param: 3
         });
-        it('should generate functions for every root in the specification', function() {
-          var dataAccessor;
-          dataAccessor = dataService.open();
-          expect(dataAccessor.getAsd).toBeDefined();
-          expect(angular.isFunction(dataAccessor.getAsd)).toBeTruthy();
-          expect(dataAccessor.getBsd).not.toBeDefined();
-          expect(angular.isFunction(dataAccessor.getBsd)).toBeFalsy();
-          spyOn(dataService, 'get').and.callThrough();
-          dataAccessor.getAsd(1);
-          dataAccessor.getAsd(2, {
-            param: 3
-          });
-          dataAccessor.getAsd(4, {
-            subscribe: false
-          });
-          expect(dataService.get).toHaveBeenCalledWith('asd', 1, {
-            subscribe: true
-          });
-          expect(dataService.get).toHaveBeenCalledWith('asd', 2, {
-            param: 3,
-            subscribe: true
-          });
-          return expect(dataService.get).toHaveBeenCalledWith('asd', 4, {
-            subscribe: false
-          });
+        dataAccessor.getAsd(4, {
+          subscribe: false
         });
-        it('should unsubscribe on destroy event', function() {
-          var dataAccessor, scope;
-          scope = $rootScope.$new();
-          spyOn(scope, '$on').and.callThrough();
-          dataAccessor = dataService.open(scope);
-          expect(scope.$on).toHaveBeenCalledWith('$destroy', jasmine.any(Function));
-          spyOn(dataAccessor, 'close').and.callThrough();
-          expect(dataAccessor.close).not.toHaveBeenCalled();
-          scope.$destroy();
-          return expect(dataAccessor.close).toHaveBeenCalled();
+        expect(dataService.get).toHaveBeenCalledWith('asd', 1, {
+          subscribe: true
         });
-        return it('should call unsubscribe on each element', function() {
-          var dataAccessor, el1, el2, el3;
-          dataAccessor = dataService.open();
-          el1 = {
-            unsubscribe: jasmine.createSpy('unsubscribe1')
-          };
-          el2 = {
-            unsubscribe: jasmine.createSpy('unsubscribe2')
-          };
-          el3 = {};
-          dataAccessor.collections.push(el1);
-          dataAccessor.collections.push(el2);
-          dataAccessor.collections.push(el3);
-          expect(el1.unsubscribe).not.toHaveBeenCalled();
-          expect(el2.unsubscribe).not.toHaveBeenCalled();
-          dataAccessor.close();
-          expect(el1.unsubscribe).toHaveBeenCalled();
-          return expect(el2.unsubscribe).toHaveBeenCalled();
+        expect(dataService.get).toHaveBeenCalledWith('asd', 2, {
+          param: 3,
+          subscribe: true
         });
+        return expect(dataService.get).toHaveBeenCalledWith('asd', 4, {
+          subscribe: false
+        });
+      });
+      it('should unsubscribe on destroy event', function() {
+        var dataAccessor, scope;
+        scope = $rootScope.$new();
+        spyOn(scope, '$on').and.callThrough();
+        dataAccessor = dataService.open(scope);
+        expect(scope.$on).toHaveBeenCalledWith('$destroy', jasmine.any(Function));
+        spyOn(dataAccessor, 'close').and.callThrough();
+        expect(dataAccessor.close).not.toHaveBeenCalled();
+        scope.$destroy();
+        return expect(dataAccessor.close).toHaveBeenCalled();
+      });
+      return it('should call unsubscribe on each element', function() {
+        var dataAccessor, el1, el2, el3;
+        dataAccessor = dataService.open();
+        el1 = {
+          unsubscribe: jasmine.createSpy('unsubscribe1')
+        };
+        el2 = {
+          unsubscribe: jasmine.createSpy('unsubscribe2')
+        };
+        el3 = {};
+        dataAccessor.collections.push(el1);
+        dataAccessor.collections.push(el2);
+        dataAccessor.collections.push(el3);
+        expect(el1.unsubscribe).not.toHaveBeenCalled();
+        expect(el2.unsubscribe).not.toHaveBeenCalled();
+        dataAccessor.close();
+        expect(el1.unsubscribe).toHaveBeenCalled();
+        return expect(el2.unsubscribe).toHaveBeenCalled();
       });
     });
   });
@@ -2757,7 +2794,7 @@ if (window.jasmine || window.mocha) {
         return expect(parsed).toEqual(test);
       });
     });
-    return describe('numberOrString(string)', function() {
+    describe('numberOrString(string)', function() {
       it('should convert a string to a number if possible', function() {
         var result;
         result = dataUtilsService.numberOrString('12');
@@ -2767,6 +2804,13 @@ if (window.jasmine || window.mocha) {
         var result;
         result = dataUtilsService.numberOrString('w3as');
         return expect(result).toBe('w3as');
+      });
+    });
+    return describe('emailInString(string)', function() {
+      return it('should return an email from a string', function() {
+        var email;
+        email = dataUtilsService.emailInString('foo <bar@foo.com>');
+        return expect(email).toBe('bar@foo.com');
       });
     });
   });
@@ -3267,77 +3311,17 @@ if (window.jasmine || window.mocha) {
 
 (function() {
   describe('Socket service', function() {
-    var $location, $rootScope, WebSocketBackend, injected, socket, socketService, webSocketBackend;
-    WebSocketBackend = (function() {
-      var MockWebSocket, self;
-
-      WebSocketBackend.prototype.sendQueue = [];
-
-      WebSocketBackend.prototype.receiveQueue = [];
-
-      self = null;
-
-      function WebSocketBackend() {
-        self = this;
-        this.webSocket = new MockWebSocket();
-      }
-
-      WebSocketBackend.prototype.send = function(message) {
-        var data;
-        data = {
-          data: message
-        };
-        return this.sendQueue.push(data);
-      };
-
-      WebSocketBackend.prototype.flush = function() {
-        var message, _results;
-        _results = [];
-        while (message = this.sendQueue.shift()) {
-          _results.push(this.webSocket.onmessage(message));
-        }
-        return _results;
-      };
-
-      WebSocketBackend.prototype.getWebSocket = function() {
-        return this.webSocket;
-      };
-
-      MockWebSocket = (function() {
-        function MockWebSocket() {}
-
-        MockWebSocket.prototype.OPEN = 1;
-
-        MockWebSocket.prototype.send = function(message) {
-          return self.receiveQueue.push(message);
-        };
-
-        MockWebSocket.prototype.close = function() {
-          return typeof this.onclose === "function" ? this.onclose() : void 0;
-        };
-
-        return MockWebSocket;
-
-      })();
-
-      return WebSocketBackend;
-
-    })();
-    webSocketBackend = new WebSocketBackend();
-    beforeEach(function() {
-      module('bbData');
-      return module(function($provide) {
-        return $provide.constant('webSocketService', webSocketBackend);
-      });
-    });
-    $rootScope = $location = socketService = socket = void 0;
+    var $location, $rootScope, injected, socket, socketService, webSocketBackend;
+    beforeEach(module('bbData'));
+    $rootScope = $location = socketService = socket = webSocketBackend = void 0;
     injected = function($injector) {
       $rootScope = $injector.get('$rootScope');
       $location = $injector.get('$location');
       socketService = $injector.get('socketService');
-      socket = webSocketBackend.webSocket;
+      webSocketBackend = $injector.get('webSocketBackendService');
+      socket = webSocketBackend.getWebSocket();
       spyOn(socket, 'send').and.callThrough();
-      return spyOn(socketService, 'getWebSocket').and.returnValue(socket);
+      return spyOn(socketService, 'getWebSocket').and.callThrough();
     };
     beforeEach(inject(injected));
     it('should be defined', function() {
@@ -4161,18 +4145,25 @@ if (window.jasmine || window.mocha) {
     });
     describe('get(args)', function() {
       return it('should call dataService.get', function() {
+        var j;
         spyOn(dataService, 'get');
         expect(dataService.get).not.toHaveBeenCalled();
         i.get('b');
         expect(dataService.get).toHaveBeenCalledWith('a', 12, 'b');
-        i.get('b', {
+        j = new Wrapper(data, 'a', true);
+        j.get('b', {
           param: 1
         });
         expect(dataService.get).toHaveBeenCalledWith('a', 12, 'b', {
-          param: 1
+          param: 1,
+          subscribe: true
         });
-        i.get('b', 11);
-        return expect(dataService.get).toHaveBeenCalledWith('a', 12, 'b', 11);
+        j.get('b', 11, {
+          subscribe: false
+        });
+        return expect(dataService.get).toHaveBeenCalledWith('a', 12, 'b', 11, {
+          subscribe: false
+        });
       });
     });
     describe('getId()', function() {

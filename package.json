@@ -1,6 +1,6 @@
 {
   "name": "buildbot-data-js",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Buildbot AngularJS data module",
   "readme": "README.md",
   "author": "Andras Toth <andras.toth93@gmail.com>",

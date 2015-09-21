@@ -10,10 +10,6 @@ Under development.
 $ bower install buildbot-data
 ```
 
-### Install with npm
-```
-$ npm install buildbot-data
-```
 ## Adding dependency to your project
 
 ```

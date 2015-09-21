@@ -167,7 +167,7 @@
           identifier: 'slug',
           fields: ['logid', 'complete', 'name', 'num_lines', 'slug', 'stepid', 'type'],
           root: false,
-          paths: [],
+          paths: ['contents', 'raw'],
           "static": {
             complete: true
           }
@@ -191,6 +191,83 @@
   })();
 
   angular.module('bbData').constant('SPECIFICATION', Specification());
+
+}).call(this);
+
+(function() {
+  var Generator,
+    __slice = [].slice;
+
+  Generator = (function() {
+    var self;
+
+    self = null;
+
+    function Generator() {
+      self = this;
+    }
+
+    Generator.prototype.number = function(min, max) {
+      var random;
+      if (min == null) {
+        min = 0;
+      }
+      if (max == null) {
+        max = 100;
+      }
+      random = Math.random() * (max - min) + min;
+      return Math.floor(random);
+    };
+
+    Generator.prototype.ids = {};
+
+    Generator.prototype.id = function(name) {
+      var _base;
+      if (name == null) {
+        name = '';
+      }
+      if ((_base = self.ids)[name] == null) {
+        _base[name] = 0;
+      }
+      return self.ids[name]++;
+    };
+
+    Generator.prototype.boolean = function() {
+      return Math.random() < 0.5;
+    };
+
+    Generator.prototype.timestamp = function(after) {
+      var date;
+      if (after == null) {
+        after = Date.now();
+      }
+      date = new Date(after + self.number(1, 1000000));
+      return Math.floor(date.getTime() / 1000);
+    };
+
+    Generator.prototype.string = function(length) {
+      if (length != null) {
+        length++;
+      }
+      return self.number(100, Number.MAX_VALUE).toString(36).substring(0, length);
+    };
+
+    Generator.prototype.array = function() {
+      var args, array, fn, i, times, _i;
+      fn = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      times = self.number(1, 10);
+      array = [];
+      for (i = _i = 1; 1 <= times ? _i <= times : _i >= times; i = 1 <= times ? ++_i : --_i) {
+        array.push(fn.apply(null, args));
+      }
+      return array;
+    };
+
+    return Generator;
+
+  })();
+
+  angular.module('bbData').service('generatorService', [Generator]);
 
 }).call(this);
 
@@ -226,7 +303,7 @@
           self = this;
           angular.extend(this, config);
           endpoints = Object.keys(SPECIFICATION).filter(function(e) {
-            return SPECIFICATION[e].root;
+            return SPECIFICATION[e].id != null;
           });
           this.constructor.generateEndpoints(endpoints);
         }
@@ -252,6 +329,46 @@
           }
           collection = this.createCollection(restPath, query);
           return collection.subscribe();
+        };
+
+        DataService.prototype.mocks = {};
+
+        DataService.prototype.spied = false;
+
+        DataService.prototype.when = function() {
+          var args, query, returnValue, url, _base, _ref;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          url = args[0], query = args[1], returnValue = args[2];
+          if (returnValue == null) {
+            _ref = [{}, query], query = _ref[0], returnValue = _ref[1];
+          }
+          if ((typeof jasmine !== "undefined" && jasmine !== null) && !this.spied) {
+            spyOn(this, 'get').and.callFake(this._mockGet);
+            this.spied = true;
+          }
+          if ((_base = this.mocks)[url] == null) {
+            _base[url] = {};
+          }
+          return this.mocks[url][query] = returnValue;
+        };
+
+        DataService.prototype._mockGet = function() {
+          var args, collection, p, query, queryWithoutSubscribe, returnValue, url, _ref, _ref1, _ref2;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          _ref = this.processArguments(args), url = _ref[0], query = _ref[1];
+          queryWithoutSubscribe = angular.copy(query);
+          delete queryWithoutSubscribe.subscribe;
+          returnValue = ((_ref1 = this.mocks[url]) != null ? _ref1[query] : void 0) || ((_ref2 = this.mocks[url]) != null ? _ref2[queryWithoutSubscribe] : void 0);
+          if (returnValue == null) {
+            throw new Error("No return value for: " + url + " (" + (angular.toJson(query)) + ")");
+          }
+          collection = this.createCollection(url, query);
+          collection.from(returnValue);
+          p = $q.resolve(collection);
+          p.getArray = function() {
+            return collection;
+          };
+          return p;
         };
 
         DataService.prototype.createCollection = function() {
@@ -317,7 +434,7 @@
               var endpoints;
               this.collections = collections;
               endpoints = Object.keys(SPECIFICATION).filter(function(e) {
-                return SPECIFICATION[e].root;
+                return SPECIFICATION[e].id != null;
               });
               this.constructor.generateEndpoints(endpoints);
               if (scope != null) {
@@ -660,7 +777,7 @@
                   cmp = v[field] >= value;
                   break;
                 default:
-                  cmp = v[field] === value || (angular.isArray(v[field]) && __indexOf.call(v[field], value) >= 0);
+                  cmp = v[field] === value || (angular.isArray(v[field]) && __indexOf.call(v[field], value) >= 0) || v["_" + field] === value || (angular.isArray(v["_" + field]) && __indexOf.call(v["_" + field], value) >= 0);
               }
               if (!cmp) {
                 return false;
@@ -753,7 +870,7 @@
         IndexedDBService.prototype.processUrl = function(url) {
           return $q((function(_this) {
             return function(resolve, reject) {
-              var fieldName, fieldType, fieldValue, id, match, parentFieldName, parentFieldValue, parentId, parentName, path, pathString, query, root, specification, tableName, _ref, _ref1, _ref2, _ref3;
+              var fieldName, fieldType, fieldValue, id, match, nextUrl, parentFieldName, parentFieldValue, parentId, parentName, path, pathString, query, root, specification, splitted, tableName, _ref, _ref1, _ref2, _ref3;
               _ref = url.split('/'), root = _ref[0], id = _ref[1], path = 3 <= _ref.length ? __slice.call(_ref, 2) : [];
               specification = SPECIFICATION[root];
               query = {};
@@ -791,7 +908,9 @@
                 return resolve([tableName, query, id]);
               } else {
                 if (parentFieldName !== parentId) {
-                  return _this.get(url.split('/').slice(0, -2).join('/')).then(function(array) {
+                  splitted = url.split('/');
+                  nextUrl = splitted.slice(0, (splitted.length % 2 === 0 ? -2 : -1)).join('/');
+                  return _this.get(nextUrl).then(function(array) {
                     query[parentId] = array[0][parentId];
                     if (fieldName != null) {
                       query[fieldName] = fieldValue;
@@ -926,7 +1045,7 @@
   var Socket;
 
   Socket = (function() {
-    function Socket($log, $q, $location, $window) {
+    function Socket($log, $q, $location, $window, webSocketBackendService) {
       var SocketService;
       return new (SocketService = (function() {
         function SocketService() {}
@@ -1028,11 +1147,13 @@
         SocketService.prototype.getWebSocket = function() {
           var url;
           url = this.getUrl();
+          if (typeof jasmine !== "undefined" && jasmine !== null) {
+            return webSocketBackendService.getWebSocket();
+          }
           if ($window.ReconnectingWebSocket != null) {
             return new $window.ReconnectingWebSocket(url);
-          } else {
-            return new $window.WebSocket(url);
           }
+          return new $window.WebSocket(url);
         };
 
         return SocketService;
@@ -1044,7 +1165,70 @@
 
   })();
 
-  angular.module('bbData').service('socketService', ['$log', '$q', '$location', '$window', Socket]);
+  angular.module('bbData').service('socketService', ['$log', '$q', '$location', '$window', 'webSocketBackendService', Socket]);
+
+}).call(this);
+
+(function() {
+  var WebSocketBackend;
+
+  WebSocketBackend = (function() {
+    var MockWebSocket, self;
+
+    self = null;
+
+    function WebSocketBackend() {
+      self = this;
+      this.webSocket = new MockWebSocket();
+    }
+
+    WebSocketBackend.prototype.sendQueue = [];
+
+    WebSocketBackend.prototype.receiveQueue = [];
+
+    WebSocketBackend.prototype.send = function(message) {
+      var data;
+      data = {
+        data: message
+      };
+      return this.sendQueue.push(data);
+    };
+
+    WebSocketBackend.prototype.flush = function() {
+      var message, _results;
+      _results = [];
+      while (message = this.sendQueue.shift()) {
+        _results.push(this.webSocket.onmessage(message));
+      }
+      return _results;
+    };
+
+    WebSocketBackend.prototype.getWebSocket = function() {
+      return this.webSocket;
+    };
+
+    MockWebSocket = (function() {
+      function MockWebSocket() {}
+
+      MockWebSocket.prototype.OPEN = 1;
+
+      MockWebSocket.prototype.send = function(message) {
+        return self.receiveQueue.push(message);
+      };
+
+      MockWebSocket.prototype.close = function() {
+        return typeof this.onclose === "function" ? this.onclose() : void 0;
+      };
+
+      return MockWebSocket;
+
+    })();
+
+    return WebSocketBackend;
+
+  })();
+
+  angular.module('bbData').service('webSocketBackendService', [WebSocketBackend]);
 
 }).call(this);
 
@@ -1245,18 +1429,15 @@
           }
           return $q((function(_this) {
             return function(resolve, reject) {
-              var active, db, elapsed, inCache, item, parentId, parentIdName, parentName, restPath, specification, t, tracking, _i, _len, _ref, _ref1;
+              var active, db, dbPath, elapsed, inCache, parentId, parentIdName, parentName, restPath, specification, t, _i, _len, _ref, _ref1;
               db = indexedDBService.db;
-              tracking = {
-                path: path,
-                query: angular.toJson(query)
-              };
               t = dataUtilsService.type(path);
               specification = _this.getSpecification(t);
               for (_i = 0, _len = dbPaths.length; _i < _len; _i++) {
-                item = dbPaths[_i];
-                inCache = item.path === tracking.path && item.query === tracking.query;
-                elapsed = new Date() - new Date(item.lastActive);
+                dbPath = dbPaths[_i];
+                dbPath.query = angular.fromJson(dbPath.query);
+                inCache = (dbPath.path === path && (angular.equals(dbPath.query, query) || angular.equals(dbPath.query, {}))) || (dbPath.path === t && angular.equals(dbPath.query, {}));
+                elapsed = new Date() - new Date(dbPath.lastActive);
                 active = elapsed < 2000 || specification["static"] === true;
                 if (inCache && active) {
                   resolve();
@@ -1266,6 +1447,9 @@
               restPath = dataUtilsService.restPath(path);
               _ref = _this.getParent(restPath), parentName = _ref[0], parentId = _ref[1];
               parentIdName = (_ref1 = SPECIFICATION[parentName]) != null ? _ref1.id : void 0;
+              if (parentIdName != null) {
+                parentIdName = "_" + parentIdName;
+              }
               return restService.get(restPath, query).then(function(data) {
                 var type;
                 type = dataUtilsService.type(restPath);
@@ -1276,43 +1460,54 @@
                   }
                   return data.forEach(function(i) {
                     var id, idName, put, _ref2;
+                    put = function(element) {
+                      var k, v;
+                      for (k in element) {
+                        v = element[k];
+                        if (angular.isObject(element[k])) {
+                          element[k] = angular.toJson(v);
+                        }
+                      }
+                      return db[type].put(element);
+                    };
                     idName = (_ref2 = SPECIFICATION[type]) != null ? _ref2.id : void 0;
                     id = i[idName];
-                    put = function() {
-                      var k, v;
-                      if (parentIdName != null) {
-                        if (i[parentIdName] == null) {
-                          i[parentIdName] = [parentId];
-                        }
-                      }
-                      for (k in i) {
-                        v = i[k];
-                        if (angular.isObject(i[k])) {
-                          i[k] = angular.toJson(v);
-                        }
-                      }
-                      return db[type].put(i);
-                    };
                     if (id != null) {
                       return db[type].get(id).then(function(e) {
+                        var k, v;
                         e = dataUtilsService.parse(e);
-                        if ((e != null) && (parentIdName != null) && angular.isArray(e[parentIdName])) {
+                        for (k in i) {
+                          v = i[k];
+                          e[k] = v;
+                        }
+                        if (parentIdName != null) {
+                          if (e[parentIdName] == null) {
+                            e[parentIdName] = [];
+                          }
                           if (__indexOf.call(e[parentIdName], parentId) < 0) {
-                            return i[parentIdName] = e[parentIdName].concat(parentId);
-                          } else {
-                            return i[parentIdName] = e[parentIdName];
+                            e[parentIdName].push(parentId);
                           }
                         }
-                      })["finally"](function() {
-                        return put();
+                        return put(e);
+                      })["catch"](function() {
+                        if (parentIdName != null) {
+                          i[parentIdName] = [parentId];
+                        }
+                        return put(i);
                       });
                     } else {
-                      return put();
+                      if (parentIdName != null) {
+                        i[parentIdName] = [parentId];
+                      }
+                      return put(i);
                     }
                   });
                 }).then(function() {
                   return db.transaction('rw', db.paths, function() {
-                    return db.paths.put(tracking);
+                    return db.paths.put({
+                      path: path,
+                      query: angular.toJson(query)
+                    });
                   }).then(function() {
                     return resolve();
                   })["catch"](function(error) {
@@ -1384,9 +1579,13 @@
           subscribe = query.subscribe;
           delete query.subscribe;
           if (subscribe === false) {
-            this.load(path, query).then(function() {
-              return listener(EVENTS.READY);
-            });
+            indexedDBService.db.paths.toArray().then((function(_this) {
+              return function(dbPaths) {
+                return _this.load(path, query, dbPaths).then(function() {
+                  return listener(EVENTS.READY);
+                });
+              };
+            })(this));
             return;
           }
           channel = {
@@ -1668,7 +1867,7 @@
         CollectionInstance.prototype.add = function(element) {
           var Wrapper, instance;
           Wrapper = this.getWrapper();
-          instance = new Wrapper(element, this.getEndpoint());
+          instance = new Wrapper(element, this.getEndpoint(), this.getQuery().subscribe);
           return this.push(instance);
         };
 
@@ -1710,14 +1909,13 @@
     function Wrapper($log, dataService, dataUtilsService, tabexService, SPECIFICATION) {
       var WrapperInstance;
       return WrapperInstance = (function() {
-        function WrapperInstance(object, endpoint) {
+        function WrapperInstance(object, endpoint, _subscribe) {
           var endpoints;
+          this._subscribe = _subscribe;
           if (!angular.isString(endpoint)) {
             throw new TypeError("Parameter 'endpoint' must be a string, not " + (typeof endpoint));
           }
-          this.getEndpoint = function() {
-            return endpoint;
-          };
+          this._endpoint = endpoint;
           this.update(object);
           endpoints = Object.keys(SPECIFICATION);
           this.constructor.generateFunctions(endpoints);
@@ -1728,17 +1926,27 @@
         };
 
         WrapperInstance.prototype.get = function() {
-          var args, e, fieldName, fieldType, id, last, match, options, parameter, path, pathString, root, specification, _i, _j, _ref, _ref1, _ref2;
+          var args, e, fieldName, fieldType, id, last, match, options, parameter, path, pathString, root, specification, _base, _i, _j, _ref, _ref1, _ref2;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-          _ref = this.getEndpoint().split('/'), root = _ref[0], id = _ref[1], path = 3 <= _ref.length ? __slice.call(_ref, 2) : [];
+          _ref = this._endpoint.split('/'), root = _ref[0], id = _ref[1], path = 3 <= _ref.length ? __slice.call(_ref, 2) : [];
           options = 2 <= args.length ? __slice.call(args, 0, _i = args.length - 1) : (_i = 0, []), last = args[_i++];
           if (angular.isObject(last)) {
             pathString = path.concat('*', options).join('/');
+            if (this._subscribe != null) {
+              if ((_base = args[args.length - 1]).subscribe == null) {
+                _base.subscribe = this._subscribe;
+              }
+            }
           } else {
             pathString = path.concat('*', args).join('/');
+            if (this._subscribe != null) {
+              args.push({
+                subscribe: this._subscribe
+              });
+            }
           }
           if (path.length === 0) {
-            return dataService.get.apply(dataService, [this.getEndpoint(), this.getId()].concat(__slice.call(args)));
+            return dataService.get.apply(dataService, [this._endpoint, this.getId()].concat(__slice.call(args)));
           }
           specification = SPECIFICATION[root];
           match = specification.paths.filter(function(p) {
@@ -1759,11 +1967,11 @@
               }
             }
           }
-          return dataService.get.apply(dataService, [this.getEndpoint(), parameter].concat(__slice.call(args)));
+          return dataService.get.apply(dataService, [this._endpoint, parameter].concat(__slice.call(args)));
         };
 
         WrapperInstance.prototype.control = function(method, params) {
-          return dataService.control("" + (this.getEndpoint()) + "/" + (this.getIdentifier() || this.getId()), method, params);
+          return dataService.control("" + this._endpoint + "/" + (this.getIdentifier() || this.getId()), method, params);
         };
 
         WrapperInstance.generateFunctions = function(endpoints) {
@@ -1801,11 +2009,11 @@
         };
 
         WrapperInstance.prototype.classId = function() {
-          return SPECIFICATION[dataUtilsService.type(this.getEndpoint())].id;
+          return SPECIFICATION[dataUtilsService.type(this._endpoint)].id;
         };
 
         WrapperInstance.prototype.classIdentifier = function() {
-          return SPECIFICATION[dataUtilsService.type(this.getEndpoint())].identifier;
+          return SPECIFICATION[dataUtilsService.type(this._endpoint)].identifier;
         };
 
         WrapperInstance.prototype.unsubscribe = function() {
