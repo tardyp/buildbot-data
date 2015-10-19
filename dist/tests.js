@@ -3490,6 +3490,7 @@ if (window.jasmine || window.mocha) {
         port = 8080;
         spyOn($location, 'host').and.returnValue(host);
         spyOn($location, 'port').and.returnValue(port);
+        spyOn(socketService, 'getRootPath').and.returnValue('/');
         url = socketService.getUrl();
         return expect(url).toBe('ws://localhost:8080/ws');
       });
@@ -3499,10 +3500,11 @@ if (window.jasmine || window.mocha) {
         port = 80;
         spyOn($location, 'host').and.returnValue(host);
         spyOn($location, 'port').and.returnValue(port);
+        spyOn(socketService, 'getRootPath').and.returnValue('/');
         url = socketService.getUrl();
         return expect(url).toBe('ws://buildbot.test/ws');
       });
-      return it('should return the WebSocket url based on the host and port and protocol', function() {
+      it('should return the WebSocket url based on the host and port and protocol', function() {
         var host, port, protocol, url;
         host = 'buildbot.test';
         port = 443;
@@ -3510,8 +3512,22 @@ if (window.jasmine || window.mocha) {
         spyOn($location, 'host').and.returnValue(host);
         spyOn($location, 'port').and.returnValue(port);
         spyOn($location, 'protocol').and.returnValue(protocol);
+        spyOn(socketService, 'getRootPath').and.returnValue('/');
         url = socketService.getUrl();
         return expect(url).toBe('wss://buildbot.test/ws');
+      });
+      return it('should return the WebSocket url based on the host and port and protocol and basedir', function() {
+        var host, path, port, protocol, url;
+        host = 'buildbot.test';
+        port = 443;
+        protocol = 'https';
+        path = '/travis/';
+        spyOn($location, 'host').and.returnValue(host);
+        spyOn($location, 'port').and.returnValue(port);
+        spyOn($location, 'protocol').and.returnValue(protocol);
+        spyOn(socketService, 'getRootPath').and.returnValue(path);
+        url = socketService.getUrl();
+        return expect(url).toBe('wss://buildbot.test/travis/ws');
       });
     });
   });
