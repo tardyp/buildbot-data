@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.4.6
+ * @license AngularJS v1.4.7
  * (c) 2010-2015 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -2470,10 +2470,10 @@ if (window.jasmine || window.mocha) {
 })(window, window.angular);
 
 (function() {
-  var __slice = [].slice;
+  var slice = [].slice;
 
   describe('Data service', function() {
-    var $q, $rootScope, $state, Collection, dataService, indexedDBService, injected, restService, _dataServiceProvider;
+    var $q, $rootScope, $state, Collection, _dataServiceProvider, dataService, indexedDBService, injected, restService;
     _dataServiceProvider = null;
     beforeEach(module('bbData', function(dataServiceProvider, $provide) {
       var State;
@@ -2538,7 +2538,7 @@ if (window.jasmine || window.mocha) {
         c = null;
         spyOn(dataService, 'createCollection').and.callFake(function() {
           var args;
-          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
           c = original.apply(null, args);
           spyOn(c, 'subscribe').and.returnValue($q.resolve(c));
           return c;
@@ -2556,18 +2556,18 @@ if (window.jasmine || window.mocha) {
     });
     describe('processArguments(args)', function() {
       it('should return the restPath and the query (empty query)', function() {
-        var query, restPath, _ref;
-        _ref = dataService.processArguments(['asd', '1']), restPath = _ref[0], query = _ref[1];
+        var query, ref, restPath;
+        ref = dataService.processArguments(['asd', '1']), restPath = ref[0], query = ref[1];
         expect(restPath).toBe('asd/1');
         return expect(query).toEqual({});
       });
       return it('should return the restPath and the query (not empty query)', function() {
-        var query, restPath, _ref;
-        _ref = dataService.processArguments([
+        var query, ref, restPath;
+        ref = dataService.processArguments([
           'asd', '1', {
             parameter: 1
           }
-        ]), restPath = _ref[0], query = _ref[1];
+        ]), restPath = ref[0], query = ref[1];
         expect(restPath).toBe('asd/1');
         return expect(query).toEqual({
           parameter: 1
@@ -3088,47 +3088,47 @@ if (window.jasmine || window.mocha) {
     });
     describe('fields(array, fields)', function() {
       it('should return an array with elements having only certain fields (one field)', function() {
-        var r, result, _i, _len, _results;
+        var i, len, r, result, results;
         result = indexedDBService.fields(testArray, 'buildid');
         expect(result.length).toBe(testArray.length);
-        _results = [];
-        for (_i = 0, _len = result.length; _i < _len; _i++) {
-          r = result[_i];
-          _results.push(expect(Object.keys(r)).toEqual(['buildid']));
+        results = [];
+        for (i = 0, len = result.length; i < len; i++) {
+          r = result[i];
+          results.push(expect(Object.keys(r)).toEqual(['buildid']));
         }
-        return _results;
+        return results;
       });
       return it('should return an array with elements having only certain fields (more fields)', function() {
-        var r, result, _i, _len, _results;
+        var i, len, r, result, results;
         result = indexedDBService.fields(testArray, ['buildid', 'buildrequestid']);
         expect(result.length).toBe(testArray.length);
-        _results = [];
-        for (_i = 0, _len = result.length; _i < _len; _i++) {
-          r = result[_i];
-          _results.push(expect(Object.keys(r)).toEqual(['buildid', 'buildrequestid']));
+        results = [];
+        for (i = 0, len = result.length; i < len; i++) {
+          r = result[i];
+          results.push(expect(Object.keys(r)).toEqual(['buildid', 'buildrequestid']));
         }
-        return _results;
+        return results;
       });
     });
     describe('processUrl(url)', function() {
       it('should return [root, query, id] (empty query + id)', function() {
-        indexedDBService.processUrl('typeA/11').then(function(_arg) {
+        indexedDBService.processUrl('typeA/11').then(function(arg) {
           var id, query, tableName;
-          tableName = _arg[0], query = _arg[1], id = _arg[2];
+          tableName = arg[0], query = arg[1], id = arg[2];
           expect(tableName).toBe('typeA');
           expect(query).toEqual({});
           return expect(id).toBe(11);
         });
-        indexedDBService.processUrl('typeA/11/typeB/stringB').then(function(_arg) {
+        indexedDBService.processUrl('typeA/11/typeB/stringB').then(function(arg) {
           var id, query, tableName;
-          tableName = _arg[0], query = _arg[1], id = _arg[2];
+          tableName = arg[0], query = arg[1], id = arg[2];
           expect(tableName).toBe('typeB');
           expect(query).toEqual({});
           return expect(id).toBe('stringB');
         });
-        indexedDBService.processUrl('typeB/11/typeC/12').then(function(_arg) {
+        indexedDBService.processUrl('typeB/11/typeC/12').then(function(arg) {
           var id, query, tableName;
-          tableName = _arg[0], query = _arg[1], id = _arg[2];
+          tableName = arg[0], query = arg[1], id = arg[2];
           expect(tableName).toBe('typeC');
           expect(query).toEqual({});
           return expect(id).toBe(12);
@@ -3136,9 +3136,9 @@ if (window.jasmine || window.mocha) {
         return $rootScope.$apply();
       });
       it('should return [root, query, id] (empty query + no id)', function() {
-        indexedDBService.processUrl('typeC').then(function(_arg) {
+        indexedDBService.processUrl('typeC').then(function(arg) {
           var id, query, tableName;
-          tableName = _arg[0], query = _arg[1], id = _arg[2];
+          tableName = arg[0], query = arg[1], id = arg[2];
           expect(tableName).toBe('typeC');
           expect(query).toEqual({});
           return expect(id).toBeNull();
@@ -3146,9 +3146,9 @@ if (window.jasmine || window.mocha) {
         return $rootScope.$apply();
       });
       it('should return [root, query, id] (query including number or string field)', function() {
-        indexedDBService.processUrl('typeA/11/typeB/stringID/typeC/1').then(function(_arg) {
+        indexedDBService.processUrl('typeA/11/typeB/stringID/typeC/1').then(function(arg) {
           var id, query, tableName;
-          tableName = _arg[0], query = _arg[1], id = _arg[2];
+          tableName = arg[0], query = arg[1], id = arg[2];
           expect(tableName).toBe('typeC');
           expect(query).toEqual({
             idB: 'stringID',
@@ -3156,9 +3156,9 @@ if (window.jasmine || window.mocha) {
           });
           return expect(id).toBeNull();
         });
-        indexedDBService.processUrl('typeB/11/typeC/stringID').then(function(_arg) {
+        indexedDBService.processUrl('typeB/11/typeC/stringID').then(function(arg) {
           var id, query, tableName;
-          tableName = _arg[0], query = _arg[1], id = _arg[2];
+          tableName = arg[0], query = arg[1], id = arg[2];
           expect(tableName).toBe('typeC');
           expect(query).toEqual({
             idB: 11,
@@ -3166,18 +3166,18 @@ if (window.jasmine || window.mocha) {
           });
           return expect(id).toBeNull();
         });
-        indexedDBService.processUrl('typeC/stringID').then(function(_arg) {
+        indexedDBService.processUrl('typeC/stringID').then(function(arg) {
           var id, query, tableName;
-          tableName = _arg[0], query = _arg[1], id = _arg[2];
+          tableName = arg[0], query = arg[1], id = arg[2];
           expect(tableName).toBe('typeC');
           expect(query).toEqual({
             stringC: 'stringID'
           });
           return expect(id).toBeNull();
         });
-        indexedDBService.processUrl('typeB/stringID/typeC').then(function(_arg) {
+        indexedDBService.processUrl('typeB/stringID/typeC').then(function(arg) {
           var id, query, tableName;
-          tableName = _arg[0], query = _arg[1], id = _arg[2];
+          tableName = arg[0], query = arg[1], id = arg[2];
           expect(tableName).toBe('typeC');
           expect(query).toEqual({
             idB: 'stringID'
@@ -3448,7 +3448,7 @@ if (window.jasmine || window.mocha) {
     });
     describe('flush()', function() {
       return it('should send the messages waiting in the queue', function() {
-        var m, messages, _i, _j, _len, _len1, _results;
+        var i, j, len, len1, m, messages, results;
         socketService.open();
         messages = [
           {
@@ -3459,20 +3459,20 @@ if (window.jasmine || window.mocha) {
             c: 3
           }
         ];
-        for (_i = 0, _len = messages.length; _i < _len; _i++) {
-          m = messages[_i];
+        for (i = 0, len = messages.length; i < len; i++) {
+          m = messages[i];
           m = angular.toJson(m);
           socketService.queue.push(m);
         }
         expect(socket.send).not.toHaveBeenCalled();
         socketService.flush();
-        _results = [];
-        for (_j = 0, _len1 = messages.length; _j < _len1; _j++) {
-          m = messages[_j];
+        results = [];
+        for (j = 0, len1 = messages.length; j < len1; j++) {
+          m = messages[j];
           m = angular.toJson(m);
-          _results.push(expect(socket.send).toHaveBeenCalledWith(m));
+          results.push(expect(socket.send).toHaveBeenCalledWith(m));
         }
-        return _results;
+        return results;
       });
     });
     describe('nextId()', function() {
@@ -3493,7 +3493,7 @@ if (window.jasmine || window.mocha) {
         url = socketService.getUrl();
         return expect(url).toBe('ws://localhost:8080/ws');
       });
-      return it('should return the WebSocket url based on the host and port', function() {
+      it('should return the WebSocket url based on the host and port', function() {
         var host, port, url;
         host = 'buildbot.test';
         port = 80;
@@ -3501,6 +3501,17 @@ if (window.jasmine || window.mocha) {
         spyOn($location, 'port').and.returnValue(port);
         url = socketService.getUrl();
         return expect(url).toBe('ws://buildbot.test/ws');
+      });
+      return it('should return the WebSocket url based on the host and port and protocol', function() {
+        var host, port, protocol, url;
+        host = 'buildbot.test';
+        port = 443;
+        protocol = 'https';
+        spyOn($location, 'host').and.returnValue(host);
+        spyOn($location, 'port').and.returnValue(port);
+        spyOn($location, 'protocol').and.returnValue(protocol);
+        url = socketService.getUrl();
+        return expect(url).toBe('wss://buildbot.test/ws');
       });
     });
   });
@@ -3533,9 +3544,9 @@ if (window.jasmine || window.mocha) {
       };
 
       ClientMock.prototype.on = function(c, l) {
-        var _base;
-        if ((_base = this.channels)[c] == null) {
-          _base[c] = [];
+        var base;
+        if ((base = this.channels)[c] == null) {
+          base[c] = [];
         }
         this.channels[c].push(l);
         return this.emit(CHANNELS.REFRESH, {
@@ -3554,22 +3565,22 @@ if (window.jasmine || window.mocha) {
       };
 
       ClientMock.prototype.emit = function(c, m, self) {
-        var l, _i, _len, _ref, _results;
+        var i, l, len, ref, results;
         if (self == null) {
           self = false;
         }
         if (angular.isArray(this.channels[c]) && self) {
-          _ref = this.channels[c];
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            l = _ref[_i];
+          ref = this.channels[c];
+          results = [];
+          for (i = 0, len = ref.length; i < len; i++) {
+            l = ref[i];
             if (angular.isFunction(l)) {
-              _results.push(l(m));
+              results.push(l(m));
             } else {
-              _results.push(void 0);
+              results.push(void 0);
             }
           }
-          return _results;
+          return results;
         }
       };
 
@@ -3794,7 +3805,7 @@ if (window.jasmine || window.mocha) {
     });
     describe('loadAll()', function() {
       return it('should load all untracked paths', function() {
-        var p, paths, q, qs, _results;
+        var p, paths, q, qs, results;
         spyOn(indexedDBService.db.paths, 'toArray').and.returnValue($q.resolve([]));
         spyOn(tabexService, 'load');
         paths = {
@@ -3806,20 +3817,20 @@ if (window.jasmine || window.mocha) {
         };
         tabexService.loadAll(paths);
         $rootScope.$apply();
-        _results = [];
+        results = [];
         for (p in paths) {
           qs = paths[p];
-          _results.push((function() {
-            var _i, _len, _results1;
-            _results1 = [];
-            for (_i = 0, _len = qs.length; _i < _len; _i++) {
-              q = qs[_i];
-              _results1.push(expect(tabexService.load).toHaveBeenCalledWith(p, q, []));
+          results.push((function() {
+            var i, len, results1;
+            results1 = [];
+            for (i = 0, len = qs.length; i < len; i++) {
+              q = qs[i];
+              results1.push(expect(tabexService.load).toHaveBeenCalledWith(p, q, []));
             }
-            return _results1;
+            return results1;
           })());
         }
-        return _results;
+        return results;
       });
     });
     describe('load(path, query, dbPaths)', function() {
@@ -4131,13 +4142,13 @@ if (window.jasmine || window.mocha) {
       return expect(i).toBeDefined();
     });
     it('should add the data to the object passed in to the constructor', function() {
-      var k, v, _i, _len, _results;
-      _results = [];
-      for (v = _i = 0, _len = data.length; _i < _len; v = ++_i) {
+      var k, l, len, results, v;
+      results = [];
+      for (v = l = 0, len = data.length; l < len; v = ++l) {
         k = data[v];
-        _results.push(expect(i[k]).toEqual(v));
+        results.push(expect(i[k]).toEqual(v));
       }
-      return _results;
+      return results;
     });
     it('should generate functions for every type in the specification', function() {
       expect(i.loadA).toBeDefined();
