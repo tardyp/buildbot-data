@@ -1,0 +1,38 @@
+{
+  "name": "buildbot-data",
+  "version": "0.0.1",
+  "description": "data accessors for buildbot websocket and REST APIs",
+  "main": "dest/bundle.js",
+  "scripts": {
+    "build": "./node_modules/.bin/rollup -c",
+    "watch": "./node_modules/.bin/rollup -c -w",
+    "prestart": "npm run build",
+    "start": "node dest/bundle.js",
+    "test": "./node_modules/ava"
+  },
+  "keywords": [
+    "rollup"
+  ],
+  "author": "tardyp<tardyp@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "babel-runtime": "^6.23.0"
+  },
+  "devDependencies": {
+    "ava": "^0.19.1",
+    "babel-preset-env": "^1.4.0",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "eslint": "^3.19.0",
+    "eslint-plugin-import": "^2.3.0",
+    "eslint-config-airbnb-base": "^11.2.0",
+    "rollup": "^0.41.6",
+    "rollup-plugin-eslint": "^3.0.0",
+    "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-typescript": "^0.8.1",
+    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-replace": "^1.1.1",
+    "rollup-watch": "^3.2.2"
+  }
+}
