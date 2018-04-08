@@ -1,10 +1,10 @@
-import {DataQuery, IQuery} from "../query"
+import {DataQuery, IQuery, RestObject} from "../query"
 declare const it: any;
 declare const expect: any;
 declare const describe: any;
 
 describe('dataquery service', function() {
-    let testArray: Array<object>;
+    let testArray: Array<RestObject>;
 
     testArray = [{
             builderid: 1,
@@ -32,19 +32,19 @@ describe('dataquery service', function() {
         }
         ];
     class WrappedDataQuery {
-        filter(array:Array<object>, query: IQuery) {
+        filter(array:Array<RestObject>, query: IQuery) {
             const q = new DataQuery(query);
             array = array.slice();
             q.filter(array);
             return array;
         }
-        sort(array:Array<object>, order:Array<string>|string) {
+        sort(array:Array<RestObject>, order:Array<string>|string) {
             const q = new DataQuery({order});
             array = array.slice();
             q.sort(array, order);
             return array;
         }
-        limit(array:Array<object>, limit: number) {
+        limit(array:Array<RestObject>, limit: number) {
             const q = new DataQuery({limit});
             array = array.slice();
             q.limit(array, limit);

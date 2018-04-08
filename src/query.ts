@@ -1,7 +1,9 @@
 import { isArray, isString } from './utils'
 
 export type Order = Array<string> | string | undefined
-export type FilterValue = number | string | boolean | Array<number | string | boolean>
+export type Value = number | string | boolean
+export type RestObject = { [key: string]: Value }
+export type FilterValue = Value | Array<Value>
 export type Filter = { [key: string]: FilterValue } | undefined
 export type Limit = number | undefined
 export interface IQuery {
@@ -33,7 +35,7 @@ export class DataQuery {
         }
     }
 
-    computeQuery(array: Array<object>) {
+    computeQuery(array: Array<RestObject>) {
         // 1. filtering
         this.filter(array)
 
@@ -89,33 +91,30 @@ export class DataQuery {
         return true
     }
 
-    filter(array) {
+    filter(array: Array<RestObject>) {
         let i = 0
-        return (() => {
-            const result = []
-            while (i < array.length) {
-                const v = array[i]
-                if (this.isFiltered(v)) {
-                    result.push((i += 1))
-                } else {
-                    result.push(array.splice(i, 1))
-                }
+        const result = []
+        while (i < array.length) {
+            const v = array[i]
+            if (this.isFiltered(v)) {
+                result.push((i += 1))
+            } else {
+                result.push(array.splice(i, 1))
             }
-            return result
-        })()
+        }
+        return result
     }
 
-    sort(array, order) {
-        const compare = function(property) {
+    sort(array: Array<RestObject>, order: Order) {
+        const compare = function(property: string) {
             let reverse = false
             if (property[0] === '-') {
                 property = property.slice(1)
                 reverse = true
             }
-
-            return function(a, b) {
+            return function(a: RestObject, b: RestObject) {
                 if (reverse) {
-                    ;[a, b] = Array.from([b, a])
+                    [a, b] = [b, a]
                 }
 
                 if (a[property] < b[property]) {
@@ -127,28 +126,27 @@ export class DataQuery {
                 }
             }
         }
-        if (isString(order)) {
-            return array.sort(compare(order))
-        } else if (isArray(order)) {
-            return array.sort(function(a, b) {
-                for (let o of Array.from(order)) {
-                    const f = compare(o)(a, b)
-                    if (f) {
-                        return f
-                    }
+        const compareArray = function(a: RestObject, b: RestObject) {
+            for (let o of order) {
+                const f = compare(o)(a, b)
+                if (f) {
+                    return f
                 }
-                return 0
-            })
+            }
+            return 0
+        }
+        if (isString(order)) {
+            return array.sort(compare(order as string))
+        } else if (isArray(order)) {
+            return array.sort(compareArray)
         }
     }
 
-    limit(array, limit) {
-        return (() => {
-            const result = []
-            while (array.length > limit) {
-                result.push(array.pop())
-            }
-            return result
-        })()
+    limit(array: Array<RestObject>, limit: number) {
+        const result = []
+        while (array.length > limit) {
+            result.push(array.pop())
+        }
+        return result
     }
 }
