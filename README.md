@@ -5,19 +5,19 @@
 
 ```js
 # install deps
-npm install
+yarn install
 
 # build app
-npm run build
+yarn run build
 
 # build & watch app
-npm run watch
+yarn run watch
 
 # build & launch app
-npm run start
+yarn run start
 
 # run unit test
-npm run test
+yarn run test
 ```
 
 ## License

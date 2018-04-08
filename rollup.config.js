@@ -1,29 +1,26 @@
-const eslint = require('rollup-plugin-eslint')
 const babel = require('rollup-plugin-babel')
 const typescript = require('rollup-plugin-typescript')
 const replace = require('rollup-plugin-replace')
 const resolve = require('rollup-plugin-node-resolve')
 const commonjs = require('rollup-plugin-commonjs')
 
-export default {
-  entry: './src/index.js',
-  dest: './dest/bundle.js',
-  format: 'cjs',
+export default [{
+  input: './src/index.ts',
+  output: {
+    file: './dest/buildbot-data.js',
+    format: 'umd',
+    name:"buildbot-data",
+  },
   plugins: [
-    eslint(),
-    babel({
-      exclude: 'node_modules/**',
-      runtimeHelpers: true,
-    }),
-    typescript({
-      exclude: 'node_modules/**',
-    }),
-    commonjs({
-      namedExports: {},
-    }),
-    resolve(),
-    replace({
-      'process.env.NODE_ENV': JSON.stringify('development'),
-    }),
-  ]
-}
+  typescript({
+    exclude: 'node_modules/**',
+  }),
+  commonjs({
+    namedExports: {},
+  }),
+  resolve(),
+  replace({
+    'process.env.NODE_ENV': JSON.stringify('development'),
+  }),
+]}
+]

@@ -1,1 +1,2 @@
-console.log('Application launched.');
+import { DataService } from './data'
+export { DataService }
