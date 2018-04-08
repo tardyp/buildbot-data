@@ -20,18 +20,15 @@ externals: {
 ```
 ## Setup
 
-```js
+```bash
 # install deps
 yarn install
 
-# build app
+# build lib
 yarn run build
 
-# build & watch app
+# run unit tests in a loop
 yarn run watch
-
-# build & launch app
-yarn run start
 
 # run unit test
 yarn run test
