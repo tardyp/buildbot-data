@@ -48,7 +48,7 @@ export class DataQuery {
         return this.limit(array, limit)
     }
     isFiltered(v: { [key: string]: FilterValue }) {
-        let cmpByOp : {[key: string]: Boolean} = {}
+        let cmpByOp: { [key: string]: Boolean } = {}
         for (let fieldAndOperator in this.filters) {
             const value = this.filters[fieldAndOperator]
             let [field, operator] = fieldAndOperator.split('__')
@@ -75,9 +75,9 @@ export class DataQuery {
                         // private fields added by the data service
                         field = `_${field}`
                     if (Array.isArray(toCmp) && Array.isArray(value)) cmp = toCmp == value
-                    else if (Array.isArray(toCmp)) cmp = toCmp.indexOf(value as any)>=0
-                    else if (Array.isArray(value) && value.length==0) cmp = true
-                    else if (Array.isArray(value)) cmp = value.indexOf(toCmp)>=0
+                    else if (Array.isArray(toCmp)) cmp = toCmp.indexOf(value as any) >= 0
+                    else if (Array.isArray(value) && value.length == 0) cmp = true
+                    else if (Array.isArray(value)) cmp = value.indexOf(toCmp) >= 0
                     else cmp = toCmp == value
             }
             cmpByOp[fieldAndOperator] = cmp
@@ -114,7 +114,7 @@ export class DataQuery {
             }
             return function(a: RestObject, b: RestObject) {
                 if (reverse) {
-                    [a, b] = [b, a]
+                    ;[a, b] = [b, a]
                 }
 
                 if (a[property] < b[property]) {

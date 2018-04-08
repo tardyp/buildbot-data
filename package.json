@@ -6,8 +6,10 @@
   "scripts": {
     "build": "rollup -c",
     "watch": "jest -i --watch --verbose -c jest.json",
-    "test": "jest -i --verbose -c jest.json"
-  },
+    "test": "jest -i --verbose -c jest.json",
+    "tslint": "tslint src/*.ts",
+    "format": "prettier --print-width 100 --tab-width 4 --trailing-comma=es5 --single-quote --no-semi all --write \"src/**/*.ts\""
+    },
   "keywords": [
     "rollup"
   ],
@@ -17,12 +19,11 @@
     "babel-runtime": "^6.23.0"
   },
   "devDependencies": {
-    "tslint": "^5.9.1",
-    "typescript": "2.x",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.4.0",
     "jest": "^22.4.2",
+    "prettier": "^1.11.1",
     "rollup": "^0.x",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-commonjs": "^8.0.2",
@@ -31,6 +32,8 @@
     "rollup-plugin-replace": "^1.1.1",
     "rollup-plugin-typescript": "^0.x",
     "rollup-watch": "^3.2.2",
-    "ts-jest": "^22.4.0"
+    "ts-jest": "^22.4.0",
+    "tslint": "^5.9.1",
+    "typescript": "2.x"
   }
 }

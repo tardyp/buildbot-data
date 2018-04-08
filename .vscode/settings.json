@@ -12,7 +12,7 @@
   "tslint.autoFixOnSave": true,
   "jest.pathToConfig": "./jest.json",
   "prettier.semi": false,
-  "prettier.printWidth": 120,
+  "prettier.printWidth": 100,
   "prettier.trailingComma": "es5",
   "prettier.singleQuote": true,
   "prettier.tabWidth": 4
